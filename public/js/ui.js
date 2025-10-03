@@ -397,11 +397,34 @@ const UI = {
         elSet('thermal-text', results.fireballRadius + ' km');
         elSet('energy-badge', results.energy + ' MT');
         
+        // Update Population Impact
+        if (results.populationImpact) {
+            const pop = results.populationImpact;
+            elSet('location-category', pop.locationCategory);
+            elSet('pop-density', pop.populationDensity);
+            elSet('population-risk', this.formatNumber(pop.totalAtRisk));
+            elSet('casualties-text', this.formatNumber(pop.estimatedFatalities));
+            elSet('injured-text', this.formatNumber(pop.estimatedInjured));
+            
+            // Update severity badge
+            const severityBadge = document.getElementById('severity-badge');
+            if (severityBadge) {
+                severityBadge.textContent = pop.severity;
+                severityBadge.className = 'severity-badge ' + pop.severity;
+            }
+        }
+        
         // Update Statistics tab
     elSet('stat-energy', results.energy + ' MT');
     elSet('stat-crater', results.craterDiameter + 'K m');
     elSet('stat-seismic', results.seismicMagnitude);
     elSet('stat-area', (Number(results.affectedArea) / 1000).toFixed(2) + 'K km²');
+        
+        // Update population stats
+        if (results.populationImpact) {
+            elSet('stat-population', this.formatNumber(results.populationImpact.totalAtRisk));
+            elSet('stat-casualties', this.formatNumber(results.populationImpact.estimatedFatalities));
+        }
         
         // Update detailed analysis
     elSet('analysis-crater-d', results.craterDiameter + 'K m');
@@ -419,6 +442,19 @@ const UI = {
         
         // Update location
         elSet('impact-location', this.getLocationName(params.lat, params.lon));
+    },
+    
+    /**
+     * Format large numbers for display
+     */
+    formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(2) + 'M';
+        } else if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        } else {
+            return num.toString();
+        }
     },
     
     /**
