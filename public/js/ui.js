@@ -406,6 +406,11 @@ const UI = {
             elSet('casualties-text', this.formatNumber(pop.estimatedFatalities));
             elSet('injured-text', this.formatNumber(pop.estimatedInjured));
             
+            // Update data source indicator
+            if (pop.dataSource) {
+                elSet('pop-data-source', pop.dataSource);
+            }
+            
             // Update severity badge
             const severityBadge = document.getElementById('severity-badge');
             if (severityBadge) {
@@ -443,8 +448,10 @@ const UI = {
     if (threatFill) threatFill.style.width = threatLevel.percentage + '%';
     elSet('threat-label', threatLevel.label);
         
-        // Update location
-        elSet('impact-location', this.getLocationName(params.lat, params.lon));
+        // Update location - use server's geocoded name if available, otherwise fallback to client-side
+        const locationName = results.locationName || this.getLocationName(params.lat, params.lon);
+        elSet('impact-location', locationName);
+        elSet('impact-location-text', locationName); // Also update the Impact Effects paragraph
     },
     
     /**

@@ -8,6 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const NASA_API_KEY = process.env.NASA_API_KEY || 'DEMO_KEY';
 
+// Simple in-memory cache for location names
+const locationCache = new Map();
+const CACHE_DURATION = 3600000; // 1 hour in milliseconds
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -58,7 +62,7 @@ app.get('/api/neo/browse', async (req, res) => {
 });
 
 // Impact calculation endpoint
-app.post('/api/calculate-impact', (req, res) => {
+app.post('/api/calculate-impact', async (req, res) => {
     try {
         const {
             diameter,      // meters
@@ -69,8 +73,35 @@ app.post('/api/calculate-impact', (req, res) => {
             lon
         } = req.body;
 
+        // Get location name from OpenStreetMap
+        const locationName = await getLocationName(lat, lon);
+
+        // Get real population density from NASA SEDAC
+        const sedacDensity = await getPopulationDensity(lat, lon);
+        
         // Calculate impact parameters
         const results = calculateImpactPhysics(diameter, velocity, angle, density, lat, lon);
+        
+        // Now calculate population impact with real data
+        const populationImpact = calculatePopulationImpact(
+            lat, lon,
+            parseFloat(results.craterRadius),
+            parseFloat(results.airBlastRadius),
+            parseFloat(results.moderateDamageRadius),
+            parseFloat(results.fireballRadius),
+            parseFloat(results.thermal3rdDegreeRadius),
+            parseFloat(results.thermal2ndDegreeRadius),
+            parseFloat(results.lungDamageRadius),
+            parseFloat(results.eardrumsRuptureRadius),
+            parseFloat(results.seismicFeltRadius),
+            sedacDensity  // Pass real NASA SEDAC data
+        );
+        
+        // Replace placeholder with actual population data
+        results.populationImpact = populationImpact;
+        
+        // Add location name to results
+        results.locationName = locationName;
         
         res.json(results);
     } catch (error) {
@@ -108,6 +139,159 @@ app.post('/api/calculate-mitigation', (req, res) => {
         });
     }
 });
+
+// Get location name from coordinates using OpenStreetMap Nominatim
+async function getLocationName(lat, lon) {
+    const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+    
+    // Check cache first
+    const cached = locationCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.name;
+    }
+    
+    try {
+        // Add delay to respect rate limiting (1 request per second)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const response = await axios.get(
+            `https://nominatim.openstreetmap.org/reverse`,
+            {
+                params: {
+                    format: 'json',
+                    lat: lat,
+                    lon: lon,
+                    zoom: 10,
+                    addressdetails: 1,
+                    'accept-language': 'en'  // Force English language
+                },
+                headers: {
+                    'User-Agent': 'MeteorMadnessSimulator/1.0 (NASA Space Apps Challenge 2025)'
+                },
+                timeout: 5000
+            }
+        );
+        
+        const data = response.data;
+        let locationName;
+        
+        // Determine location name based on available data
+        if (data.address) {
+            const addr = data.address;
+            
+            // Check for water bodies (oceans, seas)
+            if (addr.body_of_water) {
+                locationName = addr.body_of_water;
+            } else if (addr.ocean) {
+                locationName = addr.ocean;
+            } else if (addr.sea) {
+                locationName = addr.sea;
+            }
+            // Check for populated areas
+            else if (addr.city) {
+                locationName = `${addr.city}, ${addr.country || ''}`.trim();
+            } else if (addr.town) {
+                locationName = `${addr.town}, ${addr.country || ''}`.trim();
+            } else if (addr.village) {
+                locationName = `${addr.village}, ${addr.country || ''}`.trim();
+            } else if (addr.state) {
+                locationName = `${addr.state}, ${addr.country || ''}`.trim();
+            } else if (addr.country) {
+                locationName = addr.country;
+            } else {
+                locationName = `${lat.toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+            }
+        } else {
+            locationName = `${lat.toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+        }
+        
+        // Cache the result
+        locationCache.set(cacheKey, {
+            name: locationName,
+            timestamp: Date.now()
+        });
+        
+        console.log(`📍 Geocoded: ${lat}, ${lon} → ${locationName}`);
+        return locationName;
+        
+    } catch (error) {
+        console.error('Geocoding error:', error.message);
+        // Fallback to coordinates
+        return `${lat.toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+    }
+}
+
+// NASA SEDAC Population Density Cache
+const populationCache = new Map();
+const POP_CACHE_DURATION = 86400000; // 24 hours in milliseconds
+
+// Get population density from NASA SEDAC GPWv4
+async function getPopulationDensity(lat, lon) {
+    const cacheKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+    
+    // Check cache first
+    const cached = populationCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < POP_CACHE_DURATION) {
+        console.log(`🗺️  Population cache hit: ${lat}, ${lon} → ${cached.density} people/km²`);
+        return cached.density;
+    }
+    
+    try {
+        // NASA SEDAC GPWv4 Population Density API
+        // This uses the GPWv4 2020 adjusted population density dataset
+        const sedacUrl = `https://sedac.ciesin.columbia.edu/arcgis/rest/services/sedac/gpw_v4/GPWv4_2020_UN_Adjusted_Population_Density/MapServer/identify`;
+        
+        const response = await axios.get(sedacUrl, {
+            headers: {
+                'User-Agent': 'Meteor-Madness-Simulator/1.0'
+            },
+            params: {
+                geometry: `${lon},${lat}`,
+                geometryType: 'esriGeometryPoint',
+                sr: '4326',
+                layers: 'all:0',
+                tolerance: 2,
+                mapExtent: `${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}`,
+                imageDisplay: '400,400,96',
+                returnGeometry: 'false',
+                f: 'json'
+            },
+            timeout: 5000
+        });
+        
+        let populationDensity = 0;
+        
+        if (response.data && response.data.results && response.data.results.length > 0) {
+            // Extract population density from the first result
+            const result = response.data.results[0];
+            const attributes = result.attributes;
+            
+            // The field name varies by dataset version, try common ones
+            const densityValue = attributes['Pixel Value'] || 
+                                attributes['VALUE'] || 
+                                attributes['Population Density'] ||
+                                attributes['DENSITY'];
+            
+            if (densityValue !== undefined && densityValue !== null && densityValue >= 0) {
+                populationDensity = parseFloat(densityValue);
+                console.log(`🌍 NASA SEDAC: ${lat}, ${lon} → ${populationDensity.toFixed(2)} people/km²`);
+            }
+        }
+        
+        // Cache the result
+        populationCache.set(cacheKey, {
+            density: populationDensity,
+            timestamp: Date.now()
+        });
+        
+        return populationDensity;
+        
+    } catch (error) {
+        console.warn('NASA SEDAC API error:', error.message);
+        // Return null to indicate API failure (will use fallback)
+        return null;
+    }
+}
 
 // Physics calculation functions
 function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
@@ -215,19 +399,9 @@ function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
         'MODERATE - May generate local tsunamis' : 
         'LOW';
     
-    // Calculate population at risk with detailed breakdown
-    const populationImpact = calculatePopulationImpact(
-        lat, lon, 
-        craterRadius / 1000, 
-        airBlastRadius, 
-        moderateDamageRadius,
-        fireballRadius,
-        thermal3rdDegreeRadius,
-        thermal2ndDegreeRadius,
-        lungDamageRadius,
-        eardrumsRuptureRadius,
-        seismicFeltRadius
-    );
+    // Note: populationImpact will be calculated asynchronously in the endpoint
+    // Placeholder for now, will be replaced with real data
+    const populationImpact = null;
     
     return {
         // Basic energy
@@ -306,43 +480,67 @@ function calculatePopulationImpact(
     thermal2ndRadius,
     lungDamageRadius,
     eardrumsRadius,
-    seismicRadius
+    seismicRadius,
+    sedacDensity = null  // Real population density from NASA SEDAC (optional)
 ) {
-    // Estimate population density based on location
+    // Use SEDAC data if available, otherwise fall back to geographic estimation
     let populationDensity; // people per km²
     let locationCategory;
+    let dataSource;
     
-    // Determine location type and population density
-    const absLat = Math.abs(lat);
-    
-    // Ocean/remote areas
-    if ((absLat < 60 && (
-        (lon > -180 && lon < -140) || // Pacific
-        (lon > -60 && lon < 20) ||    // Atlantic
-        (lon > 40 && lon < 140)       // Indian Ocean
-    )) && absLat < 40) {
-        populationDensity = 0.5; // Ocean
-        locationCategory = 'Ocean/Remote';
-    }
-    // Polar regions
-    else if (absLat > 60) {
-        populationDensity = 1;
-        locationCategory = 'Polar Region';
-    }
-    // Major population centers (simplified regions)
-    else if (
-        (lat > 20 && lat < 50 && lon > -130 && lon < -60) || // North America
-        (lat > 35 && lat < 65 && lon > -10 && lon < 40) ||   // Europe
-        (lat > 20 && lat < 45 && lon > 70 && lon < 145) ||   // Asia
-        (lat > -35 && lat < -10 && lon > -60 && lon < -35)   // South America (populated)
-    ) {
-        populationDensity = 150; // Urban/suburban average
-        locationCategory = 'Populated Region';
-    }
-    // Moderate population
-    else {
-        populationDensity = 25; // Rural/moderate
-        locationCategory = 'Rural Area';
+    if (sedacDensity !== null) {
+        // Use real NASA SEDAC data
+        populationDensity = sedacDensity;
+        dataSource = 'NASA SEDAC GPWv4';
+        
+        // Categorize based on actual density
+        if (populationDensity === 0) {
+            locationCategory = 'Unpopulated/Ocean';
+        } else if (populationDensity < 1) {
+            locationCategory = 'Remote/Wilderness';
+        } else if (populationDensity < 10) {
+            locationCategory = 'Rural Area';
+        } else if (populationDensity < 100) {
+            locationCategory = 'Suburban Area';
+        } else if (populationDensity < 1000) {
+            locationCategory = 'Urban Area';
+        } else {
+            locationCategory = 'Dense Urban Area';
+        }
+    } else {
+        // Fallback: Estimate population density based on location (old method)
+        dataSource = 'Geographic Estimation';
+        const absLat = Math.abs(lat);
+        
+        // Ocean/remote areas
+        if ((absLat < 60 && (
+            (lon > -180 && lon < -140) || // Pacific
+            (lon > -60 && lon < 20) ||    // Atlantic
+            (lon > 40 && lon < 140)       // Indian Ocean
+        )) && absLat < 40) {
+            populationDensity = 0.5; // Ocean
+            locationCategory = 'Ocean/Remote';
+        }
+        // Polar regions
+        else if (absLat > 60) {
+            populationDensity = 1;
+            locationCategory = 'Polar Region';
+        }
+        // Major population centers (simplified regions)
+        else if (
+            (lat > 20 && lat < 50 && lon > -130 && lon < -60) || // North America
+            (lat > 35 && lat < 65 && lon > -10 && lon < 40) ||   // Europe
+            (lat > 20 && lat < 45 && lon > 70 && lon < 145) ||   // Asia
+            (lat > -35 && lat < -10 && lon > -60 && lon < -35)   // South America (populated)
+        ) {
+            populationDensity = 150; // Urban/suburban average
+            locationCategory = 'Populated Region';
+        }
+        // Moderate population
+        else {
+            populationDensity = 25; // Rural/moderate
+            locationCategory = 'Rural Area';
+        }
     }
     
     // Calculate casualties by zone
@@ -404,6 +602,7 @@ function calculatePopulationImpact(
         estimatedInjured: injured,
         locationCategory,
         populationDensity: populationDensity.toFixed(1),
+        dataSource,  // Shows whether using real NASA data or estimation
         severity,
         
         // Detailed breakdowns
