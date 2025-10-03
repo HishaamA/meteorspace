@@ -205,7 +205,7 @@ const Physics = {
     },
     
     /**
-     * Convert geographical coordinates to 3D position on sphere
+     * Convert latitude/longitude to 3D Cartesian coordinates
      * @param {number} lat - Latitude in degrees
      * @param {number} lon - Longitude in degrees
      * @param {number} radius - Sphere radius
@@ -215,13 +215,12 @@ const Physics = {
         const latRad = (lat * Math.PI) / 180;
         const lonRad = (lon * Math.PI) / 180;
         
-        // Convert lat/lon to 3D coordinates
-        // Three.js uses: X = right, Y = up, Z = forward
-        // Longitude 0° = X-axis, Latitude 0° = XZ plane
+        // Standard spherical to Cartesian conversion for Earth coordinates
+        // This matches the standard map projection used in the 2D map
         return {
             x: radius * Math.cos(latRad) * Math.cos(lonRad),
             y: radius * Math.sin(latRad),
-            z: radius * Math.cos(latRad) * Math.sin(lonRad)
+            z: -radius * Math.cos(latRad) * Math.sin(lonRad)
         };
     }
 };
