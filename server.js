@@ -350,6 +350,11 @@ function calculatePopulationImpact(
     const severeArea = Math.PI * Math.pow(severeRadius, 2) - craterArea;
     const moderateArea = Math.PI * Math.pow(moderateRadius, 2) - Math.PI * Math.pow(severeRadius, 2);
     
+    // Determine if ocean impact (for reduced thermal/burn effects)
+    const isOceanImpact = locationCategory === 'Ocean/Remote' || locationCategory === 'Polar Region';
+    const thermalReductionFactor = isOceanImpact ? 0.05 : 1.0; // 95% reduction for ocean impacts
+    const blastReductionFactor = isOceanImpact ? 0.1 : 1.0; // 90% reduction for blast effects over water
+    
     // Calculate population in each zone
     const peopleInCrater = Math.round(craterArea * populationDensity);
     const peopleInFireball = Math.round(Math.PI * Math.pow(fireballRadius, 2) * populationDensity);
@@ -358,22 +363,22 @@ function calculatePopulationImpact(
     
     // Fatality rates by zone
     const craterFatalities = Math.round(craterArea * populationDensity * 1.0); // 100% in crater (vaporized)
-    const fireballDeaths = Math.round(Math.PI * Math.pow(fireballRadius, 2) * populationDensity * 0.95); // 95% in fireball
-    const severeFatalities = Math.round(severeArea * populationDensity * 0.7); // 70% in severe blast zone
-    const moderateFatalities = Math.round(moderateArea * populationDensity * 0.3); // 30% in moderate zone
+    const fireballDeaths = Math.round(Math.PI * Math.pow(fireballRadius, 2) * populationDensity * 0.95 * thermalReductionFactor); // 95% in fireball, reduced for ocean
+    const severeFatalities = Math.round(severeArea * populationDensity * 0.7 * blastReductionFactor); // 70% in severe blast zone, reduced for ocean
+    const moderateFatalities = Math.round(moderateArea * populationDensity * 0.3 * blastReductionFactor); // 30% in moderate zone, reduced for ocean
     
-    // Shock wave casualties
-    const shockWaveDeaths = Math.round(severeArea * populationDensity * 0.6); // 60% from shock wave effects
+    // Shock wave casualties (reduced over water)
+    const shockWaveDeaths = Math.round(severeArea * populationDensity * 0.6 * blastReductionFactor); // 60% from shock wave effects
     
-    // Wind blast casualties
-    const windBlastDeaths = Math.round(severeArea * populationDensity * 0.65); // 65% from wind effects
+    // Wind blast casualties (reduced over water)
+    const windBlastDeaths = Math.round(severeArea * populationDensity * 0.65 * blastReductionFactor); // 65% from wind effects
     
     // Seismic casualties (much lower fatality rate)
     const seismicDeaths = Math.round(Math.PI * Math.pow(seismicRadius, 2) * populationDensity * 0.01); // 1% in felt zone
     
-    // Thermal radiation burn casualties
-    const burns3rdDegree = Math.round(Math.PI * Math.pow(thermal3rdRadius, 2) * populationDensity * 0.6);
-    const burns2ndDegree = Math.round(Math.PI * Math.pow(thermal2ndRadius, 2) * populationDensity * 0.4);
+    // Thermal radiation burn casualties (significantly reduced for ocean impacts)
+    const burns3rdDegree = Math.round(Math.PI * Math.pow(thermal3rdRadius, 2) * populationDensity * 0.6 * thermalReductionFactor);
+    const burns2ndDegree = Math.round(Math.PI * Math.pow(thermal2ndRadius, 2) * populationDensity * 0.4 * thermalReductionFactor);
     
     const totalFatalities = Math.round(craterFatalities + severeFatalities + moderateFatalities);
     const totalAtRisk = Math.round(Math.PI * Math.pow(moderateRadius, 2) * populationDensity);

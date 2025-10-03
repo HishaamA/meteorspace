@@ -550,14 +550,63 @@ const UI = {
      * Get location name from coordinates
      */
     getLocationName(lat, lon) {
-        // Simplified - you could integrate a geocoding API for real names
-        if (Math.abs(lat) < 5 && Math.abs(lon + 160) < 20) {
-            return 'Pacific Ocean';
-        } else if (Math.abs(lat) < 10 && Math.abs(lon + 30) < 20) {
-            return 'Atlantic Ocean';
-        } else {
-            return `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+        const absLat = Math.abs(lat);
+        
+        // Major Cities (approximate)
+        if (lat > 40 && lat < 41 && lon > -74 && lon < -73) return 'New York City, USA';
+        if (lat > 48 && lat < 49 && lon > 2 && lon < 3) return 'Paris, France';
+        if (lat > 51 && lat < 52 && lon > -1 && lon < 1) return 'London, UK';
+        if (lat > 35 && lat < 36 && lon > 139 && lon < 140) return 'Tokyo, Japan';
+        if (lat > -34 && lat < -33 && lon > 18 && lon < 19) return 'Cape Town, South Africa';
+        if (lat > -34 && lat < -33 && lon > 151 && lon < 152) return 'Sydney, Australia';
+        if (lat > 55 && lat < 56 && lon > 37 && lon < 38) return 'Moscow, Russia';
+        if (lat > 39 && lat < 40 && lon > 116 && lon < 117) return 'Beijing, China';
+        if (lat > 28 && lat < 29 && lon > 77 && lon < 78) return 'New Delhi, India';
+        if (lat > -23 && lat < -22 && lon > -44 && lon < -43) return 'Rio de Janeiro, Brazil';
+        if (lat > 19 && lat < 20 && lon > -99 && lon < -98) return 'Mexico City, Mexico';
+        if (lat > 33 && lat < 34 && lon > -118 && lon < -117) return 'Los Angeles, USA';
+        if (lat > 41 && lat < 42 && lon > -88 && lon < -87) return 'Chicago, USA';
+        
+        // Oceans
+        if (absLat < 60) {
+            // Pacific Ocean (largest ocean)
+            if ((lon > 120 && lon < 180) || (lon < -100 && lon > -180)) {
+                if (absLat < 23) return 'Central Pacific Ocean';
+                return 'Pacific Ocean';
+            }
+            // Atlantic Ocean
+            if (lon > -80 && lon < 0) {
+                if (absLat < 23) return 'Tropical Atlantic Ocean';
+                return 'Atlantic Ocean';
+            }
+            // Indian Ocean
+            if (lon > 40 && lon < 120 && lat < 30) {
+                return 'Indian Ocean';
+            }
+            // Mediterranean
+            if (lat > 30 && lat < 45 && lon > 0 && lon < 40) {
+                return 'Mediterranean Sea';
+            }
         }
+        
+        // Continents/Regions
+        if (lat > 25 && lat < 50 && lon > -125 && lon < -65) return 'United States';
+        if (lat > 50 && lat < 70 && lon > -140 && lon < -60) return 'Canada';
+        if (lat > 10 && lat < 35 && lon > -115 && lon < -85) return 'Mexico/Central America';
+        if (lat > -35 && lat < 15 && lon > -80 && lon < -35) return 'South America';
+        if (lat > 35 && lat < 70 && lon > -10 && lon < 40) return 'Europe';
+        if (lat > -35 && lat < 35 && lon > -15 && lon < 50) return 'Africa';
+        if (lat > 5 && lat < 75 && lon > 40 && lon < 180) return 'Asia';
+        if (lat > -45 && lat < -10 && lon > 110 && lon < 155) return 'Australia';
+        
+        // Polar regions
+        if (absLat > 66) {
+            if (lat > 0) return 'Arctic Region';
+            return 'Antarctica';
+        }
+        
+        // Default to coordinates
+        return `${lat.toFixed(1)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(1)}° ${lon >= 0 ? 'E' : 'W'}`;
     },
     
     /**
