@@ -890,6 +890,102 @@ body {
     font-size: 0.8rem;
 }
 
+/* ============================================
+   Professional Chart Visualizations
+   ============================================ */
+
+.charts-container {
+    margin: 3rem 0;
+}
+
+.chart-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.chart-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.15);
+}
+
+.chart-card-half {
+    flex: 1;
+    min-width: 400px;
+}
+
+.chart-card-full {
+    flex: 1 1 100%;
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chart-title {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.chart-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.chart-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    padding: 1rem 0;
+}
+
+.chart-canvas-wrapper canvas {
+    max-height: 400px;
+}
+
+/* Responsive Chart Layout */
+@media (max-width: 1200px) {
+    .chart-card-half {
+        min-width: 100%;
+    }
+    
+    .chart-row {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-container {
+        margin: 2rem 0;
+    }
+    
+    .chart-card {
+        padding: 1rem;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+    }
+    
+    .chart-subtitle {
+        font-size: 0.85rem;
+    }
+}
+
 /* Analysis Section */
 .analysis-section {
     background: var(--bg-secondary);

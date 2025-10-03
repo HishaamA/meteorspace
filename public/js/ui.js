@@ -460,6 +460,16 @@ const UI = {
         const locationName = results.locationName || this.getLocationName(params.lat, params.lon);
         elSet('impact-location', locationName);
         elSet('impact-location-text', locationName); // Also update the Impact Effects paragraph
+        
+        // Initialize and update charts with DYNAMIC data
+        if (window.Charts) {
+            // Initialize charts if not already done
+            if (!window.Charts.charts || Object.keys(window.Charts.charts).length === 0) {
+                window.Charts.init();
+            }
+            // Update charts with new data - pass both results AND parameters
+            window.Charts.updateCharts(results, params);
+        }
     },
     
     /**

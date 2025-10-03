@@ -15,6 +15,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Chart.js for Statistics Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 </head>
 <body>
     <!-- AMOLED Navbar -->
@@ -285,6 +288,68 @@
                                 <div class="stat-label">Estimated Casualties</div>
                                 <div class="stat-value" id="stat-casualties">0</div>
                                 <div class="stat-unit">Fatalities</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Chart Visualizations -->
+                    <div class="charts-container">
+                        <!-- Impact & Energy Row -->
+                        <div class="chart-row">
+                            <div class="chart-card chart-card-half">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Impact Distribution</h3>
+                                    <p class="chart-subtitle">Breakdown of impact effects</p>
+                                </div>
+                                <div class="chart-canvas-wrapper">
+                                    <canvas id="impact-distribution-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="chart-card chart-card-half">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Energy Distribution</h3>
+                                    <p class="chart-subtitle">How impact energy is distributed</p>
+                                </div>
+                                <div class="chart-canvas-wrapper">
+                                    <canvas id="energy-distribution-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline & Atmospheric Row -->
+                        <div class="chart-row">
+                            <div class="chart-card chart-card-half">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Crater Formation Timeline</h3>
+                                    <p class="chart-subtitle">Crater development in first second</p>
+                                </div>
+                                <div class="chart-canvas-wrapper">
+                                    <canvas id="crater-timeline-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="chart-card chart-card-half">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Atmospheric Entry Dynamics</h3>
+                                    <p class="chart-subtitle">AI-powered physics simulation of velocity decay through Earth's atmosphere</p>
+                                </div>
+                                <div class="chart-canvas-wrapper">
+                                    <canvas id="atmospheric-entry-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Affected Area Expansion -->
+                        <div class="chart-row">
+                            <div class="chart-card chart-card-full">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Affected Area Expansion</h3>
+                                    <p class="chart-subtitle">Impact zone growth over time</p>
+                                </div>
+                                <div class="chart-canvas-wrapper">
+                                    <canvas id="area-expansion-chart"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -640,6 +705,7 @@
     <script src="js/physics.js"></script>
     <script src="js/visualization3d.js"></script>
     <script src="js/visualization2d.js"></script>
+    <script src="js/charts.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
