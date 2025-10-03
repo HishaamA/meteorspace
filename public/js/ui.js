@@ -2,6 +2,7 @@
 
 const UI = {
     currentScenario: null,
+    selectedMitigationStrategy: null,
     
     /**
      * Initialize UI event listeners
@@ -84,11 +85,26 @@ const UI = {
         // Mitigation calculation
         const calcMitigationBtn = document.getElementById('calculate-mitigation-btn');
         if (calcMitigationBtn) {
-            calcMitigationBtn.addEventListener('click', () => {
-                if (this.currentScenario) {
-                    this.runMitigation(this.currentScenario.params, this.currentScenario.results);
-                } else {
-                    alert('Please run a simulation first');
+            calcMitigationBtn.addEventListener('click', async () => {
+                if (!this.currentScenario) {
+                    this.showNotification('Please run a simulation first', 'error');
+                    return;
+                }
+                
+                if (!this.selectedMitigationStrategy) {
+                    this.showNotification('Please select a mitigation strategy first', 'error');
+                    return;
+                }
+                
+                this.showLoading(true);
+                try {
+                    await this.runMitigation(this.currentScenario.params, this.currentScenario.results);
+                    this.showNotification('Mitigation calculated successfully', 'success');
+                } catch (error) {
+                    this.showNotification('Failed to calculate mitigation: ' + error.message, 'error');
+                    console.error(error);
+                } finally {
+                    this.showLoading(false);
                 }
             });
         }
@@ -147,7 +163,7 @@ const UI = {
      */
     setupSliders() {
         const sliders = [
-            { id: 'diameter', display: 'diameter-value', suffix: ' m' },
+            { id: 'diameter', display: 'diameter-value', suffix: 'm' },
             { id: 'velocity', display: 'velocity-value', suffix: ' km/s' },
             { id: 'angle', display: 'angle-value', suffix: '°' },
             { id: 'warning-time', display: 'warning-time-value', suffix: ' years' },
@@ -159,6 +175,10 @@ const UI = {
             const display = document.getElementById(slider.display);
             
             if (element && display) {
+                // Set initial value
+                display.textContent = element.value + slider.suffix;
+                
+                // Update on input
                 element.addEventListener('input', (e) => {
                     display.textContent = e.target.value + slider.suffix;
                 });
@@ -175,6 +195,9 @@ const UI = {
         
         mitigationBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                // Store selected strategy
+                this.selectedMitigationStrategy = btn.dataset.strategy;
+                
                 // Remove active state from all buttons
                 mitigationBtns.forEach(b => {
                     b.style.background = 'var(--bg-card)';
@@ -189,6 +212,8 @@ const UI = {
                 if (mitigationParams) {
                     mitigationParams.classList.remove('hidden');
                 }
+                
+                console.log('Selected mitigation strategy:', this.selectedMitigationStrategy);
             });
         });
     },
@@ -450,7 +475,7 @@ const UI = {
      * Run mitigation simulation
      */
     async runMitigation(asteroidParams, originalResults) {
-        const mitigationType = document.getElementById('mitigation').value;
+        const mitigationType = this.selectedMitigationStrategy || 'kinetic';
         const warningTime = parseFloat(document.getElementById('warning-time').value);
         const velocityChange = parseFloat(document.getElementById('velocity-change').value);
         
@@ -528,7 +553,7 @@ const UI = {
      * Show notification message
      */
     showNotification(message, type = 'info') {
-        // Simple console log for now - could be enhanced with toast notifications
+        // Console logging
         const styles = {
             info: 'color: #4a9eff',
             success: 'color: #4caf50',
@@ -536,10 +561,47 @@ const UI = {
         };
         console.log(`%c${message}`, styles[type]);
         
-        // Could add a toast notification system here
-        if (type === 'error') {
-            alert(message);
-        }
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: ${type === 'error' ? '#ef5350' : type === 'success' ? '#4caf50' : '#4a9eff'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        `;
+        toast.textContent = message;
+        
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 };
 
