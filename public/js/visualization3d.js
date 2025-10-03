@@ -461,8 +461,8 @@ const Visualization3D = {
         // Position marker on Earth surface
         const earthRadius = this.earthRadius || 63.71;
         const pos = Physics.latLonToCartesian(lat, lon, earthRadius);
-        console.log(`3D: Converted to position: x=${pos.x.toFixed(2)}, y=${pos.z.toFixed(2)}, z=${pos.y.toFixed(2)}`);
-        markerGroup.position.set(pos.x, pos.z, pos.y);
+        console.log(`3D: Converted to position: x=${pos.x.toFixed(2)}, y=${pos.y.toFixed(2)}, z=${pos.z.toFixed(2)}`);
+        markerGroup.position.set(pos.x, pos.y, pos.z);
         
         // Orient marker to point outward from Earth center
         markerGroup.lookAt(0, 0, 0);
