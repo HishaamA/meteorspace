@@ -43,7 +43,8 @@ const UI = {
                 
                 // Add active class to clicked tab and corresponding content
                 btn.classList.add('active');
-                document.getElementById(`${targetTab}-tab`).classList.add('active');
+                const targetEl = document.getElementById(`${targetTab}-tab`);
+                if (targetEl) targetEl.classList.add('active');
             });
         });
     },
@@ -237,16 +238,19 @@ const UI = {
     setupTooltips() {
         const tooltipIcons = document.querySelectorAll('.tooltip-icon');
         const tooltipPopup = document.getElementById('tooltip-popup');
-        
+        if (!tooltipPopup) return; // No tooltip container — silently disable tooltips
+
         tooltipIcons.forEach(icon => {
             icon.addEventListener('mouseenter', (e) => {
                 const text = e.target.dataset.tooltip;
-                tooltipPopup.textContent = text;
-                tooltipPopup.classList.remove('hidden');
-                
-                const rect = e.target.getBoundingClientRect();
-                tooltipPopup.style.left = rect.left + 'px';
-                tooltipPopup.style.top = (rect.bottom + 5) + 'px';
+                if (text) {
+                    tooltipPopup.textContent = text;
+                    tooltipPopup.classList.remove('hidden');
+
+                    const rect = e.target.getBoundingClientRect();
+                    tooltipPopup.style.left = rect.left + 'px';
+                    tooltipPopup.style.top = (rect.bottom + 5) + 'px';
+                }
             });
             
             icon.addEventListener('mouseleave', () => {
@@ -260,7 +264,8 @@ const UI = {
      */
     setupNEOSelector() {
         const neoSelect = document.getElementById('neo-select');
-        
+        if (!neoSelect) return; // Selector not present on this page
+
         neoSelect.addEventListener('change', async (e) => {
             if (e.target.value === 'fetch') {
                 await this.loadNEOData();
@@ -293,9 +298,11 @@ const UI = {
                 
                 // Update NEO selector
                 const neoSelect = document.getElementById('neo-select');
-                neoSelect.innerHTML = `<option value="custom">Custom Asteroid</option>
+                if (neoSelect) {
+                    neoSelect.innerHTML = `<option value="custom">Custom Asteroid</option>
                                        <option value="fetch">Load from NASA NEO API...</option>
                                        <option value="${neo.id}" selected>${neo.name}</option>`;
+                }
                 
                 this.showNotification(`Loaded data for ${neo.name}`, 'success');
             }
@@ -358,7 +365,8 @@ const UI = {
             this.visualizeImpact(params, results);
             
             // Check for mitigation
-            const mitigationType = document.getElementById('mitigation').value;
+            const mitigationEl = document.getElementById('mitigation');
+            const mitigationType = mitigationEl ? mitigationEl.value : 'none';
             if (mitigationType !== 'none') {
                 await this.runMitigation(params, results);
             }
@@ -378,37 +386,39 @@ const UI = {
     displayResults(results) {
         // Update Impact Images tab
         const params = this.currentScenario.params;
-        document.getElementById('crater-diameter-text').textContent = results.craterDiameter + ' km';
-        document.getElementById('crater-depth-text').textContent = results.craterDepth + ' km';
-        document.getElementById('size-text').textContent = params.diameter + 'm';
-        document.getElementById('material-text').textContent = this.getMaterialName(params.density);
-        document.getElementById('velocity-text').textContent = params.velocity + ' km/s';
-        document.getElementById('energy-text').textContent = results.energy;
-        document.getElementById('magnitude-text').textContent = results.seismicMagnitude;
-        document.getElementById('thermal-text').textContent = results.fireballRadius + ' km';
-        document.getElementById('energy-badge').textContent = results.energy + ' MT';
+        const elSet = (id, value) => { const e = document.getElementById(id); if (e) e.textContent = value; };
+        elSet('crater-diameter-text', results.craterDiameter + ' km');
+        elSet('crater-depth-text', results.craterDepth + ' km');
+        elSet('size-text', params.diameter + 'm');
+        elSet('material-text', this.getMaterialName(params.density));
+        elSet('velocity-text', params.velocity + ' km/s');
+        elSet('energy-text', results.energy);
+        elSet('magnitude-text', results.seismicMagnitude);
+        elSet('thermal-text', results.fireballRadius + ' km');
+        elSet('energy-badge', results.energy + ' MT');
         
         // Update Statistics tab
-        document.getElementById('stat-energy').textContent = results.energy + ' MT';
-        document.getElementById('stat-crater').textContent = results.craterDiameter + 'K m';
-        document.getElementById('stat-seismic').textContent = results.seismicMagnitude;
-        document.getElementById('stat-area').textContent = (Number(results.affectedArea) / 1000).toFixed(2) + 'K km²';
+    elSet('stat-energy', results.energy + ' MT');
+    elSet('stat-crater', results.craterDiameter + 'K m');
+    elSet('stat-seismic', results.seismicMagnitude);
+    elSet('stat-area', (Number(results.affectedArea) / 1000).toFixed(2) + 'K km²');
         
         // Update detailed analysis
-        document.getElementById('analysis-crater-d').textContent = results.craterDiameter + 'K m';
-        document.getElementById('analysis-crater-depth').textContent = results.craterDepth + 'K m';
-        document.getElementById('analysis-ejecta').textContent = '34.47 km³'; // Calculate if needed
-        document.getElementById('analysis-duration').textContent = '2.5 sec'; // Calculate if needed
-        document.getElementById('analysis-thermal').textContent = results.fireballRadius + ' km';
-        document.getElementById('analysis-blast').textContent = results.airBlastRadius + ' km';
+    elSet('analysis-crater-d', results.craterDiameter + 'K m');
+    elSet('analysis-crater-depth', results.craterDepth + 'K m');
+    elSet('analysis-ejecta', '34.47 km³'); // Calculate if needed
+    elSet('analysis-duration', '2.5 sec'); // Calculate if needed
+    elSet('analysis-thermal', results.fireballRadius + ' km');
+    elSet('analysis-blast', results.airBlastRadius + ' km');
         
         // Update threat level
-        const threatLevel = this.calculateThreatLevel(results.energy);
-        document.getElementById('threat-fill').style.width = threatLevel.percentage + '%';
-        document.getElementById('threat-label').textContent = threatLevel.label;
+    const threatLevel = this.calculateThreatLevel(results.energy);
+    const threatFill = document.getElementById('threat-fill');
+    if (threatFill) threatFill.style.width = threatLevel.percentage + '%';
+    elSet('threat-label', threatLevel.label);
         
         // Update location
-        document.getElementById('impact-location').textContent = this.getLocationName(params.lat, params.lon);
+        elSet('impact-location', this.getLocationName(params.lat, params.lon));
     },
     
     /**
@@ -580,6 +590,7 @@ const UI = {
      */
     showLoading(show) {
         const overlay = document.getElementById('loading-overlay');
+        if (!overlay) return; // Nothing to toggle
         if (show) {
             overlay.classList.remove('hidden');
         } else {
