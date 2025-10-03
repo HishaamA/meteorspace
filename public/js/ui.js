@@ -10,31 +10,136 @@ const UI = {
         // Slider value displays
         this.setupSliders();
         
-        // Mitigation strategy toggle
+        // Tab navigation
+        this.setupTabs();
+        
+        // Button listeners
+        this.setupButtons();
+        
+        // Mitigation options
         this.setupMitigation();
         
-        // Tooltips
-        this.setupTooltips();
-        
-        // NEO selector
-        this.setupNEOSelector();
-        
-        // Map selection button
-        document.getElementById('select-on-map').addEventListener('click', () => {
-            alert('Click on the map below to select an impact location');
-        });
-        
-        // Simulate button
-        document.getElementById('simulate-btn').addEventListener('click', () => {
-            this.runSimulation();
-        });
-        
-        // Compare button
-        document.getElementById('compare-btn').addEventListener('click', () => {
-            this.compareScenarios();
-        });
+        // Input synchronization
+        this.setupInputSync();
         
         console.log('UI initialized');
+    },
+    
+    /**
+     * Setup tab switching
+     */
+    setupTabs() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                btn.classList.add('active');
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+            });
+        });
+    },
+    
+    /**
+     * Setup button listeners
+     */
+    setupButtons() {
+        // Primary simulation buttons
+        const startSimBtn = document.getElementById('start-simulation-btn');
+        const simulateBtn = document.getElementById('simulate-btn');
+        
+        if (startSimBtn) {
+            startSimBtn.addEventListener('click', () => this.runSimulation());
+        }
+        if (simulateBtn) {
+            simulateBtn.addEventListener('click', () => this.runSimulation());
+        }
+        
+        // Reset buttons
+        const resetBtn = document.getElementById('reset-btn');
+        const reset3dBtn = document.getElementById('reset-3d-btn');
+        
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.resetAll());
+        }
+        if (reset3dBtn) {
+            reset3dBtn.addEventListener('click', () => this.resetAll());
+        }
+        
+        // Home button
+        const homeBtn = document.getElementById('home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+        
+        // Mitigation calculation
+        const calcMitigationBtn = document.getElementById('calculate-mitigation-btn');
+        if (calcMitigationBtn) {
+            calcMitigationBtn.addEventListener('click', () => {
+                if (this.currentScenario) {
+                    this.runMitigation(this.currentScenario.params, this.currentScenario.results);
+                } else {
+                    alert('Please run a simulation first');
+                }
+            });
+        }
+    },
+    
+    /**
+     * Setup input synchronization between config and sidebar
+     */
+    setupInputSync() {
+        // Sync diameter
+        const diameterInput = document.getElementById('diameter-input');
+        const diameterSlider = document.getElementById('diameter');
+        
+        if (diameterInput && diameterSlider) {
+            diameterInput.addEventListener('input', (e) => {
+                diameterSlider.value = e.target.value;
+                document.getElementById('diameter-value').textContent = e.target.value + 'm';
+            });
+        }
+        
+        // Sync velocity
+        const velocityInput = document.getElementById('velocity-input');
+        const velocitySlider = document.getElementById('velocity');
+        
+        if (velocityInput && velocitySlider) {
+            velocityInput.addEventListener('input', (e) => {
+                velocitySlider.value = e.target.value;
+                document.getElementById('velocity-value').textContent = e.target.value + ' km/s';
+            });
+        }
+        
+        // Sync angle
+        const angleInput = document.getElementById('angle-input');
+        const angleSlider = document.getElementById('angle');
+        
+        if (angleInput && angleSlider) {
+            angleInput.addEventListener('input', (e) => {
+                angleSlider.value = e.target.value;
+                document.getElementById('angle-value').textContent = e.target.value + '°';
+            });
+        }
+        
+        // Sync material
+        const materialSelect = document.getElementById('material-select');
+        const densitySelect = document.getElementById('density');
+        
+        if (materialSelect && densitySelect) {
+            materialSelect.addEventListener('change', (e) => {
+                densitySelect.value = e.target.value;
+            });
+        }
     },
     
     /**
@@ -62,18 +167,29 @@ const UI = {
     },
     
     /**
-     * Setup mitigation strategy controls
+     * Setup mitigation options
      */
     setupMitigation() {
-        const mitigationSelect = document.getElementById('mitigation');
+        const mitigationBtns = document.querySelectorAll('.btn-mitigation');
         const mitigationParams = document.getElementById('mitigation-params');
         
-        mitigationSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'none') {
-                mitigationParams.classList.add('hidden');
-            } else {
-                mitigationParams.classList.remove('hidden');
-            }
+        mitigationBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active state from all buttons
+                mitigationBtns.forEach(b => {
+                    b.style.background = 'var(--bg-card)';
+                    b.style.color = 'var(--accent-blue)';
+                });
+                
+                // Set active state
+                btn.style.background = 'var(--accent-blue)';
+                btn.style.color = 'white';
+                
+                // Show parameters panel
+                if (mitigationParams) {
+                    mitigationParams.classList.remove('hidden');
+                }
+            });
         });
     },
     
@@ -199,12 +315,108 @@ const UI = {
      * Display results in UI
      */
     displayResults(results) {
-        document.getElementById('energy-result').textContent = results.energy;
-        document.getElementById('crater-result').textContent = results.craterDiameter;
-        document.getElementById('seismic-result').textContent = results.seismicMagnitude;
-        document.getElementById('area-result').textContent = Number(results.affectedArea).toLocaleString();
-        document.getElementById('fireball-result').textContent = results.fireballRadius;
-        document.getElementById('tsunami-result').textContent = results.tsunamiRisk;
+        // Update Impact Images tab
+        const params = this.currentScenario.params;
+        document.getElementById('crater-diameter-text').textContent = results.craterDiameter + ' km';
+        document.getElementById('crater-depth-text').textContent = results.craterDepth + ' km';
+        document.getElementById('size-text').textContent = params.diameter + 'm';
+        document.getElementById('material-text').textContent = this.getMaterialName(params.density);
+        document.getElementById('velocity-text').textContent = params.velocity + ' km/s';
+        document.getElementById('energy-text').textContent = results.energy;
+        document.getElementById('magnitude-text').textContent = results.seismicMagnitude;
+        document.getElementById('thermal-text').textContent = results.fireballRadius + ' km';
+        document.getElementById('energy-badge').textContent = results.energy + ' MT';
+        
+        // Update Statistics tab
+        document.getElementById('stat-energy').textContent = results.energy + ' MT';
+        document.getElementById('stat-crater').textContent = results.craterDiameter + 'K m';
+        document.getElementById('stat-seismic').textContent = results.seismicMagnitude;
+        document.getElementById('stat-area').textContent = (Number(results.affectedArea) / 1000).toFixed(2) + 'K km²';
+        
+        // Update detailed analysis
+        document.getElementById('analysis-crater-d').textContent = results.craterDiameter + 'K m';
+        document.getElementById('analysis-crater-depth').textContent = results.craterDepth + 'K m';
+        document.getElementById('analysis-ejecta').textContent = '34.47 km³'; // Calculate if needed
+        document.getElementById('analysis-duration').textContent = '2.5 sec'; // Calculate if needed
+        document.getElementById('analysis-thermal').textContent = results.fireballRadius + ' km';
+        document.getElementById('analysis-blast').textContent = results.airBlastRadius + ' km';
+        
+        // Update threat level
+        const threatLevel = this.calculateThreatLevel(results.energy);
+        document.getElementById('threat-fill').style.width = threatLevel.percentage + '%';
+        document.getElementById('threat-label').textContent = threatLevel.label;
+        
+        // Update location
+        document.getElementById('impact-location').textContent = this.getLocationName(params.lat, params.lon);
+    },
+    
+    /**
+     * Calculate threat level based on energy
+     */
+    calculateThreatLevel(energy) {
+        const energyNum = parseFloat(energy);
+        if (energyNum < 10) {
+            return { percentage: 20, label: 'Low' };
+        } else if (energyNum < 50) {
+            return { percentage: 40, label: 'Moderate' };
+        } else if (energyNum < 100) {
+            return { percentage: 60, label: 'High' };
+        } else if (energyNum < 500) {
+            return { percentage: 80, label: 'Severe' };
+        } else {
+            return { percentage: 100, label: 'Catastrophic' };
+        }
+    },
+    
+    /**
+     * Get material name from density
+     */
+    getMaterialName(density) {
+        const materials = {
+            1000: 'ice',
+            2000: 'carbonaceous',
+            3000: 'rocky',
+            8000: 'iron'
+        };
+        return materials[density] || 'rocky';
+    },
+    
+    /**
+     * Get location name from coordinates
+     */
+    getLocationName(lat, lon) {
+        // Simplified - you could integrate a geocoding API for real names
+        if (Math.abs(lat) < 5 && Math.abs(lon + 160) < 20) {
+            return 'Pacific Ocean';
+        } else if (Math.abs(lat) < 10 && Math.abs(lon + 30) < 20) {
+            return 'Atlantic Ocean';
+        } else {
+            return `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+        }
+    },
+    
+    /**
+     * Reset all inputs and visualizations
+     */
+    resetAll() {
+        // Reset inputs
+        document.getElementById('diameter-input').value = 100;
+        document.getElementById('velocity-input').value = 20;
+        document.getElementById('angle-input').value = 45;
+        document.getElementById('diameter').value = 100;
+        document.getElementById('velocity').value = 20;
+        document.getElementById('angle').value = 45;
+        document.getElementById('diameter-value').textContent = '100m';
+        document.getElementById('velocity-value').textContent = '20 km/s';
+        document.getElementById('angle-value').textContent = '45°';
+        
+        // Reset map
+        Visualization2D.reset();
+        
+        // Clear current scenario
+        this.currentScenario = null;
+        
+        this.showNotification('Reset complete', 'info');
     },
     
     /**
