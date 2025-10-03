@@ -460,9 +460,19 @@ const Visualization3D = {
         
         // Position marker on Earth surface
         const earthRadius = this.earthRadius || 63.71;
-        const pos = Physics.latLonToCartesian(lat, lon, earthRadius);
-        console.log(`3D: Converted to position: x=${pos.x.toFixed(2)}, y=${pos.y.toFixed(2)}, z=${pos.z.toFixed(2)}`);
-        markerGroup.position.set(pos.x, pos.y, pos.z);
+        
+        // Convert latitude and longitude from degrees to radians
+        const latRad = (lat * Math.PI) / 180;
+        const lonRad = (lon * Math.PI) / 180;
+        
+        // Use the same coordinate system as the 2D map
+        // This is the standard spherical to Cartesian conversion
+        const x = earthRadius * Math.cos(latRad) * Math.cos(lonRad);
+        const y = earthRadius * Math.sin(latRad);
+        const z = -earthRadius * Math.cos(latRad) * Math.sin(lonRad); // Note the negative sign for z
+        
+        console.log(`3D: Converted to position: x=${x.toFixed(2)}, y=${y.toFixed(2)}, z=${z.toFixed(2)}`);
+        markerGroup.position.set(x, y, z);
         
         // Orient marker to point outward from Earth center
         markerGroup.lookAt(0, 0, 0);
