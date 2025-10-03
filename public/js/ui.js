@@ -167,48 +167,8 @@ const UI = {
      * Setup input synchronization between config and sidebar
      */
     setupInputSync() {
-        // Sync diameter
-        const diameterInput = document.getElementById('diameter-input');
-        const diameterSlider = document.getElementById('diameter');
-        
-        if (diameterInput && diameterSlider) {
-            diameterInput.addEventListener('input', (e) => {
-                diameterSlider.value = e.target.value;
-                document.getElementById('diameter-value').textContent = e.target.value + 'm';
-            });
-        }
-        
-        // Sync velocity
-        const velocityInput = document.getElementById('velocity-input');
-        const velocitySlider = document.getElementById('velocity');
-        
-        if (velocityInput && velocitySlider) {
-            velocityInput.addEventListener('input', (e) => {
-                velocitySlider.value = e.target.value;
-                document.getElementById('velocity-value').textContent = e.target.value + ' km/s';
-            });
-        }
-        
-        // Sync angle
-        const angleInput = document.getElementById('angle-input');
-        const angleSlider = document.getElementById('angle');
-        
-        if (angleInput && angleSlider) {
-            angleInput.addEventListener('input', (e) => {
-                angleSlider.value = e.target.value;
-                document.getElementById('angle-value').textContent = e.target.value + '°';
-            });
-        }
-        
-        // Sync material
-        const materialSelect = document.getElementById('material-select');
-        const densitySelect = document.getElementById('density');
-        
-        if (materialSelect && densitySelect) {
-            materialSelect.addEventListener('change', (e) => {
-                densitySelect.value = e.target.value;
-            });
-        }
+        // No synchronization needed - duplicate config section removed
+        // All parameters are now controlled via 3D visualization sidebar
     },
     
     /**
@@ -529,14 +489,16 @@ const UI = {
         Visualization2D.visualizeImpact(params.lat, params.lon, results.zones);
         
         // Update 3D visualization
-        const impactPos = Physics.latLonToCartesian(params.lat, params.lon, 50);
+        const earthRadius = Visualization3D.earthRadius || 63.71;
+        const impactPos = Physics.latLonToCartesian(params.lat, params.lon, earthRadius);
         Visualization3D.addImpactMarker(params.lat, params.lon);
         
-        // Create asteroid
+        // Create asteroid - start position further away based on angle
+        const distance = earthRadius * 5; // Start 5x Earth radius away
         const asteroidStartPos = {
-            x: impactPos.x * 3,
-            y: impactPos.y * 3 + 100,
-            z: impactPos.z * 3
+            x: impactPos.x * (distance / earthRadius),
+            y: impactPos.y * (distance / earthRadius) + earthRadius * 1.5,
+            z: impactPos.z * (distance / earthRadius)
         };
         Visualization3D.createAsteroid(params.diameter, asteroidStartPos);
         Visualization3D.drawTrajectory(asteroidStartPos, impactPos);

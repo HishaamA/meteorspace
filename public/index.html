@@ -23,66 +23,9 @@
     <main class="app-container">
         <!-- Configuration Section -->
         <section class="config-section">
-            <h2 class="section-title">Configure Asteroid Parameters</h2>
+            <h2 class="section-title">Select Impact Location</h2>
             
             <div class="config-grid">
-                <!-- Asteroid Size Card -->
-                <div class="config-card">
-                    <div class="card-icon">🚀</div>
-                    <h3>Asteroid Size</h3>
-                    <p class="card-subtitle">Diameter in meters</p>
-                    
-                    <div class="input-group">
-                        <label for="diameter-input">Size (m)</label>
-                        <input type="number" id="diameter-input" min="1" max="10000" value="100" class="modern-input">
-                        <p class="input-hint">Range: 1 - 10,000 meters</p>
-                    </div>
-                </div>
-
-                <!-- Velocity Card -->
-                <div class="config-card">
-                    <div class="card-icon">💨</div>
-                    <h3>Velocity</h3>
-                    <p class="card-subtitle">Speed of approach</p>
-                    
-                    <div class="input-group">
-                        <label for="velocity-input">Velocity (km/s)</label>
-                        <input type="number" id="velocity-input" min="5" max="72" value="20" class="modern-input">
-                        <p class="input-hint">Range: 5 - 72 km/s</p>
-                    </div>
-                </div>
-
-                <!-- Impact Angle Card -->
-                <div class="config-card">
-                    <div class="card-icon">📐</div>
-                    <h3>Impact Angle</h3>
-                    <p class="card-subtitle">Angle of entry</p>
-                    
-                    <div class="input-group">
-                        <label for="angle-input">Angle (degrees)</label>
-                        <input type="number" id="angle-input" min="0" max="90" value="45" class="modern-input">
-                        <p class="input-hint">Range: 0° - 90° (0° = horizontal, 90° = vertical)</p>
-                    </div>
-                </div>
-
-                <!-- Composition Card -->
-                <div class="config-card">
-                    <div class="card-icon">🪨</div>
-                    <h3>Composition</h3>
-                    <p class="card-subtitle">Material type</p>
-                    
-                    <div class="input-group">
-                        <label for="material-select">Material</label>
-                        <select id="material-select" class="modern-select">
-                            <option value="1000">Ice (1,000 kg/m³)</option>
-                            <option value="2000">Carbonaceous (2,000 kg/m³)</option>
-                            <option value="3000" selected>Rocky (3,000 kg/m³)</option>
-                            <option value="8000">Iron (8,000 kg/m³)</option>
-                        </select>
-                        <p class="input-hint">Density: 3,000 kg/m³</p>
-                    </div>
-                </div>
-
                 <!-- Impact Location Card -->
                 <div class="config-card">
                     <div class="card-icon">📍</div>
@@ -124,7 +67,7 @@
         <section class="visualization-section">
             <div class="section-header">
                 <h2 class="section-title">3D Visualization</h2>
-                <p class="section-subtitle">Interactive asteroid impact simulation</p>
+                <p class="section-subtitle">Interactive asteroid impact simulation • Asteroid size exaggerated 50× for visibility</p>
                 <button class="icon-btn" id="home-btn" title="Home">
                     <span>🏠</span>
                     Home

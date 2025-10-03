@@ -30,7 +30,7 @@ const Visualization3D = {
         
         // Create camera
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
-        this.camera.position.set(0, 150, 300);
+        this.camera.position.set(0, 200, 400);
         
         // Create renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -41,8 +41,8 @@ const Visualization3D = {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.minDistance = 50;
-        this.controls.maxDistance = 1000;
+        this.controls.minDistance = 80;
+        this.controls.maxDistance = 1500;
         
         // Add lights
         const ambientLight = new THREE.AmbientLight(0x404040, 1);
@@ -63,8 +63,8 @@ const Visualization3D = {
         this.createStarfield();
         
         // Add grid
-        const gridHelper = new THREE.GridHelper(400, 20, 0x2a3555, 0x1a1f3a);
-        gridHelper.position.y = -80;
+        const gridHelper = new THREE.GridHelper(500, 25, 0x2a3555, 0x1a1f3a);
+        gridHelper.position.y = -100;
         this.scene.add(gridHelper);
         
         // Initialize raycaster for location picking
@@ -87,7 +87,9 @@ const Visualization3D = {
      * Create Earth sphere with NASA Blue Marble texture
      */
     createEarth() {
-        const geometry = new THREE.SphereGeometry(50, 64, 64);
+        // Earth radius in scene units (represents ~6371 km)
+        this.earthRadius = 63.71; // Using 1 unit = 100 km for scale
+        const geometry = new THREE.SphereGeometry(this.earthRadius, 64, 64);
         
         // Load NASA Blue Marble Earth texture
         const textureLoader = new THREE.TextureLoader();
@@ -105,7 +107,7 @@ const Visualization3D = {
         this.scene.add(this.earth);
         
         // Add atmosphere glow
-        const atmosphereGeometry = new THREE.SphereGeometry(52, 64, 64);
+        const atmosphereGeometry = new THREE.SphereGeometry(this.earthRadius * 1.03, 64, 64);
         const atmosphereMaterial = new THREE.MeshBasicMaterial({
             color: 0x4a9eff,
             transparent: true,
@@ -152,8 +154,11 @@ const Visualization3D = {
             this.scene.remove(this.asteroid);
         }
         
-        // Scale for visualization (asteroids are small compared to Earth)
-        const visualSize = Math.max(3, diameter / 10);
+        // Scale: diameter in meters, convert to km, then to scene units (1 unit = 100 km)
+        // But exaggerate by 50x for visibility (asteroids would be invisible at true scale)
+        const scaleToEarth = (diameter / 1000) / 100; // Convert m to km to scene units
+        const exaggeration = 50; // Make asteroid visible
+        const visualSize = Math.max(0.5, scaleToEarth * exaggeration);
         
         const geometry = new THREE.SphereGeometry(visualSize, 16, 16);
         const material = new THREE.MeshPhongMaterial({
@@ -241,7 +246,8 @@ const Visualization3D = {
         );
         existingMarkers.forEach(marker => this.earth.remove(marker));
         
-        const pos = Physics.latLonToCartesian(lat, lon, 51);
+        const earthRadius = this.earthRadius || 63.71;
+        const pos = Physics.latLonToCartesian(lat, lon, earthRadius * 1.01);
         
         // Create marker
         const geometry = new THREE.SphereGeometry(2, 16, 16);
@@ -339,11 +345,6 @@ const Visualization3D = {
     animate() {
         this.animationId = requestAnimationFrame(() => this.animate());
         
-        // Rotate Earth slowly
-        if (this.earth) {
-            this.earth.rotation.y += 0.001;
-        }
-        
         // Pulse markers (both impact and location markers)
         this.earth?.children.forEach(child => {
             if (child.userData.isImpactMarker || child.userData.isLocationMarker) {
@@ -401,14 +402,14 @@ const Visualization3D = {
      * Convert 3D Cartesian coordinates to latitude/longitude
      */
     cartesianToLatLon(point) {
-        const radius = 50; // Earth sphere radius
+        const radius = this.earthRadius || 63.71;
         const x = point.x;
         const y = point.y;
         const z = point.z;
         
         // Calculate latitude and longitude
         const lat = Math.asin(y / radius) * (180 / Math.PI);
-        const lon = Math.atan2(x, z) * (180 / Math.PI);
+        const lon = Math.atan2(z, x) * (180 / Math.PI);
         
         return { lat, lon };
     },
@@ -456,7 +457,8 @@ const Visualization3D = {
         markerGroup.add(ring);
         
         // Position marker on Earth surface
-        const pos = Physics.latLonToCartesian(lat, lon, 50);
+        const earthRadius = this.earthRadius || 63.71;
+        const pos = Physics.latLonToCartesian(lat, lon, earthRadius);
         markerGroup.position.set(pos.x, pos.y, pos.z);
         
         // Orient marker to point outward from Earth center

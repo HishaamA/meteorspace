@@ -215,6 +215,9 @@ const Physics = {
         const latRad = (lat * Math.PI) / 180;
         const lonRad = (lon * Math.PI) / 180;
         
+        // Convert lat/lon to 3D coordinates
+        // Three.js uses: X = right, Y = up, Z = forward
+        // Longitude 0° = X-axis, Latitude 0° = XZ plane
         return {
             x: radius * Math.cos(latRad) * Math.cos(lonRad),
             y: radius * Math.sin(latRad),
