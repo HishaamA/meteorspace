@@ -1265,6 +1265,88 @@ body {
     background: var(--border-highlight);
 }
 
+/* Detailed Impact Effects Panels */
+.impact-effects-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.effect-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.effect-panel:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.effect-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.effect-icon {
+    font-size: 1.75rem !important;
+    color: var(--accent-blue);
+}
+
+.effect-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.effect-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.effect-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-elevated);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.effect-item:hover {
+    background: var(--bg-secondary);
+}
+
+.effect-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.effect-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+.effect-comparison {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(0, 188, 212, 0.1) 100%);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 /* Accessibility */
 button:focus,
 input:focus,
@@ -1280,5 +1362,12 @@ select:focus {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* Responsive adjustments for effect panels */
+@media (max-width: 768px) {
+    .impact-effects-container {
+        grid-template-columns: 1fr;
     }
 }
