@@ -418,6 +418,8 @@ const Visualization3D = {
      * Place a marker on the globe at the specified location
      */
     placeLocationMarker(lat, lon) {
+        console.log(`3D: Placing marker at Lat ${lat}°, Lon ${lon}°`);
+        
         // Remove existing marker if any
         if (this.locationMarker) {
             this.earth.remove(this.locationMarker);
@@ -434,14 +436,14 @@ const Visualization3D = {
             emissiveIntensity: 0.5
         });
         const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.y = 3;
+        head.position.z = 3;
         markerGroup.add(head);
         
         // Pin stick (cylinder)
         const stickGeometry = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
         const stickMaterial = new THREE.MeshBasicMaterial({ color: 0xff3333 });
         const stick = new THREE.Mesh(stickGeometry, stickMaterial);
-        stick.position.y = 1.5;
+        stick.position.z = 1.5;
         markerGroup.add(stick);
         
         // Glow ring
@@ -459,7 +461,8 @@ const Visualization3D = {
         // Position marker on Earth surface
         const earthRadius = this.earthRadius || 63.71;
         const pos = Physics.latLonToCartesian(lat, lon, earthRadius);
-        markerGroup.position.set(pos.x, pos.y, pos.z);
+        console.log(`3D: Converted to position: x=${pos.x.toFixed(2)}, y=${pos.z.toFixed(2)}, z=${pos.y.toFixed(2)}`);
+        markerGroup.position.set(pos.x, pos.z, pos.y);
         
         // Orient marker to point outward from Earth center
         markerGroup.lookAt(0, 0, 0);
