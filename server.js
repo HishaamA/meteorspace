@@ -3,6 +3,8 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const csv = require('csv-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +13,43 @@ const NASA_API_KEY = process.env.NASA_API_KEY || 'DEMO_KEY';
 // Simple in-memory cache for location names
 const locationCache = new Map();
 const CACHE_DURATION = 3600000; // 1 hour in milliseconds
+
+// World population data from CSV
+let worldPopulationData = [];
+let populationDataLoaded = false;
+
+// Load world population data from CSV on startup
+function loadWorldPopulationData() {
+    return new Promise((resolve, reject) => {
+        const csvPath = path.join(__dirname, 'public', 'images', 'world_population.csv');
+        
+        console.log('📊 Loading world population data from CSV...');
+        
+        fs.createReadStream(csvPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                worldPopulationData.push({
+                    lat: parseFloat(row.lat),
+                    lon: parseFloat(row.lng),
+                    population: parseFloat(row.pop)
+                });
+            })
+            .on('end', () => {
+                populationDataLoaded = true;
+                console.log(`✅ Loaded ${worldPopulationData.length} population data points`);
+                resolve();
+            })
+            .on('error', (error) => {
+                console.error('❌ Error loading population data:', error.message);
+                reject(error);
+            });
+    });
+}
+
+// Load population data on startup
+loadWorldPopulationData().catch(err => {
+    console.error('Failed to load population data, will use fallback estimation');
+});
 
 // Middleware
 app.use(cors());
@@ -76,8 +115,8 @@ app.post('/api/calculate-impact', async (req, res) => {
         // Get location name from OpenStreetMap
         const locationName = await getLocationName(lat, lon);
 
-        // Get real population density from NASA SEDAC
-        const sedacDensity = await getPopulationDensity(lat, lon);
+        // Get real population density from CSV data
+        const worldPopDensity = getPopulationDensity(lat, lon);
         
         // Calculate impact parameters
         const results = calculateImpactPhysics(diameter, velocity, angle, density, lat, lon);
@@ -94,7 +133,7 @@ app.post('/api/calculate-impact', async (req, res) => {
             parseFloat(results.lungDamageRadius),
             parseFloat(results.eardrumsRuptureRadius),
             parseFloat(results.seismicFeltRadius),
-            sedacDensity  // Pass real NASA SEDAC data
+            worldPopDensity  // Pass real WorldPop data
         );
         
         // Replace placeholder with actual population data
@@ -225,8 +264,8 @@ async function getLocationName(lat, lon) {
 const populationCache = new Map();
 const POP_CACHE_DURATION = 86400000; // 24 hours in milliseconds
 
-// Get population density from NASA SEDAC GPWv4
-async function getPopulationDensity(lat, lon) {
+// Get population density from CSV data
+function getPopulationDensity(lat, lon) {
     const cacheKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
     
     // Check cache first
@@ -236,61 +275,88 @@ async function getPopulationDensity(lat, lon) {
         return cached.density;
     }
     
-    try {
-        // NASA SEDAC GPWv4 Population Density API
-        // This uses the GPWv4 2020 adjusted population density dataset
-        const sedacUrl = `https://sedac.ciesin.columbia.edu/arcgis/rest/services/sedac/gpw_v4/GPWv4_2020_UN_Adjusted_Population_Density/MapServer/identify`;
-        
-        const response = await axios.get(sedacUrl, {
-            headers: {
-                'User-Agent': 'Meteor-Madness-Simulator/1.0'
-            },
-            params: {
-                geometry: `${lon},${lat}`,
-                geometryType: 'esriGeometryPoint',
-                sr: '4326',
-                layers: 'all:0',
-                tolerance: 2,
-                mapExtent: `${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}`,
-                imageDisplay: '400,400,96',
-                returnGeometry: 'false',
-                f: 'json'
-            },
-            timeout: 5000
-        });
-        
-        let populationDensity = 0;
-        
-        if (response.data && response.data.results && response.data.results.length > 0) {
-            // Extract population density from the first result
-            const result = response.data.results[0];
-            const attributes = result.attributes;
-            
-            // The field name varies by dataset version, try common ones
-            const densityValue = attributes['Pixel Value'] || 
-                                attributes['VALUE'] || 
-                                attributes['Population Density'] ||
-                                attributes['DENSITY'];
-            
-            if (densityValue !== undefined && densityValue !== null && densityValue >= 0) {
-                populationDensity = parseFloat(densityValue);
-                console.log(`🌍 NASA SEDAC: ${lat}, ${lon} → ${populationDensity.toFixed(2)} people/km²`);
-            }
-        }
-        
-        // Cache the result
-        populationCache.set(cacheKey, {
-            density: populationDensity,
-            timestamp: Date.now()
-        });
-        
-        return populationDensity;
-        
-    } catch (error) {
-        console.warn('NASA SEDAC API error:', error.message);
-        // Return null to indicate API failure (will use fallback)
+    // If CSV data not loaded yet, return null for fallback
+    if (!populationDataLoaded || worldPopulationData.length === 0) {
+        console.log(`⚠️  Population data not loaded, using geographic estimation`);
         return null;
     }
+    
+    // Find nearest population data points using distance calculation
+    const searchRadius = 0.5; // degrees (~55km at equator)
+    let nearestPoints = [];
+    
+    // First pass: find points within search radius
+    for (const point of worldPopulationData) {
+        const latDiff = lat - point.lat;
+        const lonDiff = lon - point.lon;
+        const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+        
+        if (distance <= searchRadius) {
+            nearestPoints.push({
+                ...point,
+                distance: distance
+            });
+        }
+        
+        // Stop if we have enough nearby points
+        if (nearestPoints.length >= 50) break;
+    }
+    
+    // If no points found in radius, check if it's likely ocean/remote
+    if (nearestPoints.length === 0) {
+        // Calculate distances to all points (this might be slow for large datasets)
+        let allDistances = worldPopulationData.slice(0, 1000).map(point => {
+            const latDiff = lat - point.lat;
+            const lonDiff = lon - point.lon;
+            const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+            return { ...point, distance };
+        });
+        
+        // Sort by distance and take closest 5
+        allDistances.sort((a, b) => a.distance - b.distance);
+        nearestPoints = allDistances.slice(0, 5);
+        
+        // If the closest point is more than 2 degrees away (~220km), it's likely ocean
+        if (nearestPoints[0].distance > 2) {
+            console.log(`🌊 Ocean/Remote location: ${lat}, ${lon} → 0 people/km² (nearest land ${nearestPoints[0].distance.toFixed(2)}° away)`);
+            
+            // Cache as ocean (0 density)
+            populationCache.set(cacheKey, {
+                density: 0,
+                timestamp: Date.now()
+            });
+            
+            return 0; // Ocean has 0 population density
+        }
+    }
+    
+    // Calculate weighted average population density
+    let totalWeight = 0;
+    let weightedPopulation = 0;
+    
+    for (const point of nearestPoints) {
+        // Weight decreases with distance (inverse distance weighting)
+        const weight = 1 / (point.distance + 0.01); // +0.01 to avoid division by zero
+        
+        // Assume each point represents roughly 1 km² area
+        // Convert population to density
+        const density = point.population;
+        
+        weightedPopulation += density * weight;
+        totalWeight += weight;
+    }
+    
+    const populationDensity = totalWeight > 0 ? weightedPopulation / totalWeight : 0;
+    
+    console.log(`🌍 CSV Data: ${lat}, ${lon} → ${populationDensity.toFixed(2)} people/km² (from ${nearestPoints.length} nearby points)`);
+    
+    // Cache the result
+    populationCache.set(cacheKey, {
+        density: populationDensity,
+        timestamp: Date.now()
+    });
+    
+    return populationDensity;
 }
 
 // Physics calculation functions
@@ -481,17 +547,17 @@ function calculatePopulationImpact(
     lungDamageRadius,
     eardrumsRadius,
     seismicRadius,
-    sedacDensity = null  // Real population density from NASA SEDAC (optional)
+    sedacDensity = null  // Real population density from WorldPop API (optional)
 ) {
-    // Use SEDAC data if available, otherwise fall back to geographic estimation
+    // Use WorldPop data if available, otherwise fall back to geographic estimation
     let populationDensity; // people per km²
     let locationCategory;
     let dataSource;
     
     if (sedacDensity !== null) {
-        // Use real NASA SEDAC data
+        // Use real CSV population data
         populationDensity = sedacDensity;
-        dataSource = 'NASA SEDAC GPWv4';
+        dataSource = 'World Population CSV Data';
         
         // Categorize based on actual density
         if (populationDensity === 0) {
