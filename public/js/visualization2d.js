@@ -28,6 +28,8 @@ const Visualization2D = {
         this.map.on('click', (e) => {
             const { lat, lng } = e.latlng;
             
+            console.log(`2D Map clicked: Lat ${lat.toFixed(4)}°, Lon ${lng.toFixed(4)}°`);
+            
             // Update location picker inputs
             const latInput = document.getElementById('latitude-input');
             const lonInput = document.getElementById('longitude-input');
@@ -45,7 +47,10 @@ const Visualization2D = {
             
             // Update 3D visualization marker
             if (window.Visualization3D) {
+                console.log(`Updating 3D marker to: ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`);
                 window.Visualization3D.placeLocationMarker(lat, lng);
+            } else {
+                console.warn('Visualization3D not available');
             }
             
             // Show notification

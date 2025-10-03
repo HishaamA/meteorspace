@@ -21,48 +21,6 @@
 
     <!-- Main Content -->
     <main class="app-container">
-        <!-- Configuration Section -->
-        <section class="config-section">
-            <h2 class="section-title">Select Impact Location</h2>
-            
-            <div class="config-grid">
-                <!-- Impact Location Card -->
-                <div class="config-card">
-                    <div class="card-icon">📍</div>
-                    <h3>Impact Location</h3>
-                    <p class="card-subtitle">Target coordinates</p>
-                    
-                    <div class="input-group">
-                        <label for="latitude-input">Latitude</label>
-                        <input type="number" id="latitude-input" min="-90" max="90" value="0" step="0.1" class="modern-input">
-                        <p class="input-hint">Range: -90° to 90°</p>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="longitude-input">Longitude</label>
-                        <input type="number" id="longitude-input" min="-180" max="180" value="0" step="0.1" class="modern-input">
-                        <p class="input-hint">Range: -180° to 180°</p>
-                    </div>
-                    
-                    <button id="pick-location-btn" class="btn-pick-location">
-                        <span class="btn-icon">🗺️</span>
-                        Click on 2D Map Below
-                    </button>
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button id="start-simulation-btn" class="btn-primary-large">
-                    <span class="btn-icon">▶</span>
-                    Start Simulation
-                </button>
-                <button id="reset-btn" class="btn-secondary-large">
-                    <span class="btn-icon">↻</span>
-                    Reset
-                </button>
-            </div>
-        </section>
-
         <!-- 3D Visualization Section -->
         <section class="visualization-section">
             <div class="section-header">
@@ -115,6 +73,28 @@
                             <option value="3000" selected>Rocky (3000 kg/m³)</option>
                             <option value="8000">Iron (8000 kg/m³)</option>
                         </select>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0; padding-top: 1.5rem;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Impact Location</h3>
+                        <p class="sidebar-subtitle">Target coordinates</p>
+                        
+                        <div class="param-group">
+                            <label>Latitude</label>
+                            <input type="number" id="latitude-input" min="-90" max="90" value="0" step="0.1" class="modern-input" style="padding: 0.6rem; font-size: 0.9rem;">
+                            <p class="param-hint">Range: -90° to 90°</p>
+                        </div>
+                        
+                        <div class="param-group">
+                            <label>Longitude</label>
+                            <input type="number" id="longitude-input" min="-180" max="180" value="0" step="0.1" class="modern-input" style="padding: 0.6rem; font-size: 0.9rem;">
+                            <p class="param-hint">Range: -180° to 180°</p>
+                        </div>
+                        
+                        <button id="pick-location-btn" class="btn-pick-location" style="margin-top: 0.8rem;">
+                            <span class="btn-icon">🗺️</span>
+                            Click on 2D Map Below
+                        </button>
                     </div>
 
                     <button id="simulate-btn" class="btn-primary-sidebar">
