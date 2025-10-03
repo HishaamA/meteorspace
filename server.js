@@ -160,6 +160,9 @@ function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
         'MODERATE - May generate local tsunamis' : 
         'LOW';
     
+    // Calculate population at risk
+    const populationImpact = calculatePopulationImpact(lat, lon, craterDiameter / 2000, airBlastRadius, moderateDamageRadius);
+    
     return {
         energy: energyMegatons.toFixed(2),
         craterDiameter: (craterDiameter / 1000).toFixed(2), // km
@@ -170,12 +173,87 @@ function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
         moderateDamageRadius: moderateDamageRadius.toFixed(2),
         affectedArea: affectedArea.toFixed(0),
         tsunamiRisk,
+        populationImpact,
         impactLocation: { lat, lon },
         zones: {
             crater: craterDiameter / 2000, // km radius
             severe: airBlastRadius,
             moderate: moderateDamageRadius
         }
+    };
+}
+
+function calculatePopulationImpact(lat, lon, craterRadius, severeRadius, moderateRadius) {
+    // Estimate population density based on location
+    // This is a simplified model using geographic regions
+    let populationDensity; // people per km²
+    let locationCategory;
+    
+    // Determine location type and population density
+    const absLat = Math.abs(lat);
+    
+    // Ocean/remote areas
+    if ((absLat < 60 && (
+        (lon > -180 && lon < -140) || // Pacific
+        (lon > -60 && lon < 20) ||    // Atlantic
+        (lon > 40 && lon < 140)       // Indian Ocean
+    )) && absLat < 40) {
+        populationDensity = 0.5; // Ocean
+        locationCategory = 'Ocean/Remote';
+    }
+    // Polar regions
+    else if (absLat > 60) {
+        populationDensity = 1;
+        locationCategory = 'Polar Region';
+    }
+    // Major population centers (simplified regions)
+    else if (
+        (lat > 20 && lat < 50 && lon > -130 && lon < -60) || // North America
+        (lat > 35 && lat < 65 && lon > -10 && lon < 40) ||   // Europe
+        (lat > 20 && lat < 45 && lon > 70 && lon < 145) ||   // Asia
+        (lat > -35 && lat < -10 && lon > -60 && lon < -35)   // South America (populated)
+    ) {
+        populationDensity = 150; // Urban/suburban average
+        locationCategory = 'Populated Region';
+    }
+    // Moderate population
+    else {
+        populationDensity = 25; // Rural/moderate
+        locationCategory = 'Rural Area';
+    }
+    
+    // Calculate casualties by zone
+    const craterArea = Math.PI * Math.pow(craterRadius, 2);
+    const severeArea = Math.PI * Math.pow(severeRadius, 2) - craterArea;
+    const moderateArea = Math.PI * Math.pow(moderateRadius, 2) - Math.PI * Math.pow(severeRadius, 2);
+    
+    // Fatality rates by zone
+    const craterFatalities = craterArea * populationDensity * 1.0; // 100% in crater
+    const severeFatalities = severeArea * populationDensity * 0.7; // 70% in severe blast zone
+    const moderateFatalities = moderateArea * populationDensity * 0.3; // 30% in moderate zone
+    
+    const totalFatalities = Math.round(craterFatalities + severeFatalities + moderateFatalities);
+    const totalAtRisk = Math.round(Math.PI * Math.pow(moderateRadius, 2) * populationDensity);
+    
+    // Calculate injured (those at risk but not fatal)
+    const injured = Math.round((totalAtRisk - totalFatalities) * 0.5);
+    
+    // Determine severity level
+    let severity;
+    if (totalFatalities > 1000000) severity = 'CATASTROPHIC';
+    else if (totalFatalities > 100000) severity = 'SEVERE';
+    else if (totalFatalities > 10000) severity = 'MAJOR';
+    else if (totalFatalities > 1000) severity = 'SIGNIFICANT';
+    else if (totalFatalities > 100) severity = 'MODERATE';
+    else severity = 'LOW';
+    
+    return {
+        totalAtRisk,
+        estimatedFatalities: totalFatalities,
+        estimatedInjured: injured,
+        locationCategory,
+        populationDensity: populationDensity.toFixed(1),
+        severity
     };
 }
 

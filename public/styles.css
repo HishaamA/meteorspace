@@ -391,7 +391,7 @@ body {
 .param-group input[type="range"] {
     width: 100%;
     height: 6px;
-    background: var(--bg-secondary);
+    background: #808080;
     border-radius: 3px;
     outline: none;
     -webkit-appearance: none;
@@ -671,6 +671,47 @@ body {
     border-radius: 20px;
     font-size: 0.9rem;
     font-weight: 600;
+}
+
+.severity-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.severity-badge.CATASTROPHIC {
+    background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+    color: white;
+}
+
+.severity-badge.SEVERE {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+}
+
+.severity-badge.MAJOR {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+}
+
+.severity-badge.SIGNIFICANT {
+    background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+    color: white;
+}
+
+.severity-badge.MODERATE {
+    background: linear-gradient(135deg, #ffc107 0%, #ffa000 100%);
+    color: #000;
+}
+
+.severity-badge.LOW {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
 }
 
 .scenario-subtitle {
