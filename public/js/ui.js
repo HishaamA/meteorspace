@@ -554,10 +554,12 @@ const UI = {
         // Change color based on success
         if (mitigationResults.success) {
             mitigationResult.style.borderColor = 'var(--accent-green)';
-            mitigationResult.querySelector('h4').style.color = 'var(--accent-green)';
+            const h4 = mitigationResult.querySelector('h4');
+            if (h4) h4.style.color = 'var(--accent-green)';
         } else {
             mitigationResult.style.borderColor = 'var(--accent-orange)';
-            mitigationResult.querySelector('h4').style.color = 'var(--accent-orange)';
+            const h4 = mitigationResult.querySelector('h4');
+            if (h4) h4.style.color = 'var(--accent-orange)';
         }
     },
     
