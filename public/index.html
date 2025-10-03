@@ -6,6 +6,10 @@
     <title>Asteroid Impact Simulator | NASA Space Apps Challenge 2025</title>
     <link rel="stylesheet" href="styles.css">
     
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,21 +17,43 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <h1 class="hero-title">Asteroid Impact Simulator</h1>
-        <p class="hero-subtitle">Visualize and analyze near-Earth object impact scenarios with real-time physics simulations</p>
-    </section>
+    <!-- AMOLED Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <span class="material-icons navbar-icon">bubble_chart</span>
+                <span class="navbar-title">Asteroid Impact Simulator</span>
+            </div>
+            <div class="navbar-menu">
+                <a href="#visualization" class="navbar-link">
+                    <span class="material-icons">3d_rotation</span>
+                    <span>3D Visualization</span>
+                </a>
+                <a href="#results" class="navbar-link">
+                    <span class="material-icons">analytics</span>
+                    <span>Results</span>
+                </a>
+                <a href="#map" class="navbar-link">
+                    <span class="material-icons">map</span>
+                    <span>2D Map</span>
+                </a>
+                <a href="https://github.com/HishaamA/vsmeteor" class="navbar-link" target="_blank">
+                    <span class="material-icons">code</span>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </div>
+    </nav>
 
     <!-- Main Content -->
     <main class="app-container">
         <!-- 3D Visualization Section -->
-        <section class="visualization-section">
+        <section id="visualization" class="visualization-section">
             <div class="section-header">
                 <h2 class="section-title">3D Visualization</h2>
                 <p class="section-subtitle">Interactive asteroid impact simulation • Asteroid size exaggerated 50× for visibility</p>
                 <button class="icon-btn" id="home-btn" title="Home">
-                    <span>🏠</span>
+                    <span class="material-icons">home</span>
                     Home
                 </button>
             </div>
@@ -92,17 +118,17 @@
                         </div>
                         
                         <button id="pick-location-btn" class="btn-pick-location" style="margin-top: 0.8rem;">
-                            <span class="btn-icon">🗺️</span>
+                            <span class="material-icons btn-icon">map</span>
                             Click on 2D Map Below
                         </button>
                     </div>
 
                     <button id="simulate-btn" class="btn-primary-sidebar">
-                        <span>▶</span>
+                        <span class="material-icons">play_arrow</span>
                         Start Simulation
                     </button>
                     <button id="reset-3d-btn" class="btn-secondary-sidebar">
-                        <span>↻</span>
+                        <span class="material-icons">refresh</span>
                     </button>
                 </div>
 
@@ -110,26 +136,26 @@
                 <div class="vis-main">
                     <div id="trajectory-canvas" class="canvas-3d"></div>
                     <div class="canvas-controls">
-                        <button class="control-icon" title="Zoom In">🔍+</button>
-                        <button class="control-icon" title="Zoom Out">🔍-</button>
-                        <button class="control-icon" title="Fullscreen">⛶</button>
-                        <button class="control-icon" title="Navigate">🧭</button>
+                        <button class="control-icon" title="Zoom In"><span class="material-icons">zoom_in</span></button>
+                        <button class="control-icon" title="Zoom Out"><span class="material-icons">zoom_out</span></button>
+                        <button class="control-icon" title="Fullscreen"><span class="material-icons">fullscreen</span></button>
+                        <button class="control-icon" title="Navigate"><span class="material-icons">explore</span></button>
                     </div>
                 </div>
             </div>
 
             <!-- Tab Navigation -->
-            <div class="tab-navigation">
+            <div id="results" class="tab-navigation">
                 <button class="tab-btn active" data-tab="impact-images">
-                    <span class="tab-icon">🖼️</span>
+                    <span class="material-icons tab-icon">image</span>
                     Impact Images
                 </button>
                 <button class="tab-btn" data-tab="statistics">
-                    <span class="tab-icon">📊</span>
+                    <span class="material-icons tab-icon">bar_chart</span>
                     Statistics
                 </button>
                 <button class="tab-btn" data-tab="mitigation">
-                    <span class="tab-icon">🛡️</span>
+                    <span class="material-icons tab-icon">shield</span>
                     Mitigation
                 </button>
             </div>
@@ -138,23 +164,23 @@
             <div class="tab-content active" id="impact-images-tab">
                 <div class="impact-details">
                     <div class="detail-section">
-                        <h3>⛰️ Crater Formation</h3>
+                        <h3><span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">terrain</span>Crater Formation</h3>
                         <p class="detail-text">The impact creates a crater approximately <span class="highlight" id="crater-diameter-text">6.0 km</span> in diameter and <span class="highlight" id="crater-depth-text">1.21 km</span> deep. The crater is comparable to a significant impact structure. Ejecta blankets extend several crater radii from the impact site.</p>
                     </div>
 
                     <div class="detail-section">
-                        <h3>🔥 Impact Effects</h3>
+                        <h3><span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">local_fire_department</span>Impact Effects</h3>
                         <p class="detail-text">The <span class="highlight" id="size-text">100m</span> <span id="material-text">rocky</span> asteroid strikes in Pacific Ocean at <span class="highlight" id="velocity-text">20 km/s</span>, releasing <span class="highlight" id="energy-text">75.09</span> megatons of energy. The impact generates a magnitude <span class="highlight" id="magnitude-text">5.9</span> earthquake and creates regional destruction. Thermal radiation causes burns up to <span class="highlight" id="thermal-text">17.3 km</span> from ground zero.</p>
                     </div>
 
                     <div class="impact-scenario">
-                        <div class="scenario-icon">🗻</div>
+                        <div class="scenario-icon"><span class="material-icons">filter_hdr</span></div>
                         <div class="scenario-content">
                             <h3>Crater Impact <span class="energy-badge" id="energy-badge">75.09 MT</span></h3>
                             <p class="scenario-subtitle">Predicted impact scenario</p>
                             <p class="scenario-description">The asteroid will strike Earth's surface, creating a significant crater and causing regional devastation. Impact effects include seismic activity, ejecta, and potential climate effects from dust.</p>
                             <div class="scenario-reference">
-                                <span class="ref-icon">ℹ️</span>
+                                <span class="material-icons ref-icon">info</span>
                                 <span class="ref-text">Similar to Meteor Crater in Arizona (50,000 years ago)</span>
                             </div>
                         </div>
@@ -187,7 +213,7 @@
                     <!-- Threat Level -->
                     <div class="threat-level">
                         <div class="threat-header">
-                            <span class="threat-icon">⚠️</span>
+                            <span class="material-icons threat-icon">warning</span>
                             <span>Threat Level</span>
                         </div>
                         <div class="threat-bar">
@@ -199,7 +225,7 @@
                     <!-- Statistics Grid -->
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon">⚡</div>
+                            <div class="stat-icon"><span class="material-icons">bolt</span></div>
                             <div class="stat-content">
                                 <div class="stat-label">Impact Energy</div>
                                 <div class="stat-value" id="stat-energy">75.09 MT</div>
@@ -208,7 +234,7 @@
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">🎯</div>
+                            <div class="stat-icon"><span class="material-icons">gps_fixed</span></div>
                             <div class="stat-content">
                                 <div class="stat-label">Crater Diameter</div>
                                 <div class="stat-value" id="stat-crater">6.03K m</div>
@@ -217,7 +243,7 @@
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">📈</div>
+                            <div class="stat-icon"><span class="material-icons">trending_up</span></div>
                             <div class="stat-content">
                                 <div class="stat-label">Seismic Magnitude</div>
                                 <div class="stat-value" id="stat-seismic">5.9</div>
@@ -226,7 +252,7 @@
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">🌊</div>
+                            <div class="stat-icon"><span class="material-icons">waves</span></div>
                             <div class="stat-content">
                                 <div class="stat-label">Affected Area</div>
                                 <div class="stat-value" id="stat-area">1.36K km²</div>
@@ -238,38 +264,38 @@
                     <!-- Detailed Analysis -->
                     <div class="analysis-section">
                         <div class="analysis-header">
-                            <div class="analysis-icon">🗻</div>
+                            <div class="analysis-icon"><span class="material-icons">landscape</span></div>
                             <div>
                                 <h3>Crater Impact Analysis</h3>
                                 <p class="analysis-subtitle">Impact location: <span id="impact-location">Pacific Ocean</span></p>
-                                <p class="analysis-reference">📄 NASA Reference: (2011 AG5)</p>
+                                <p class="analysis-reference"><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">description</span> NASA Reference: (2011 AG5)</p>
                             </div>
                             <div class="ai-badge">AI Calculated</div>
                         </div>
 
                         <div class="analysis-grid">
                             <div class="analysis-item">
-                                <div class="analysis-label">🗻 Crater Diameter</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">landscape</span>Crater Diameter</div>
                                 <div class="analysis-value" id="analysis-crater-d">6.03K m</div>
                             </div>
                             <div class="analysis-item">
-                                <div class="analysis-label">📏 Crater Depth</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">straighten</span>Crater Depth</div>
                                 <div class="analysis-value" id="analysis-crater-depth">1.21K m</div>
                             </div>
                             <div class="analysis-item">
-                                <div class="analysis-label">💨 Ejecta Volume</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">air</span>Ejecta Volume</div>
                                 <div class="analysis-value" id="analysis-ejecta">34.47 km³</div>
                             </div>
                             <div class="analysis-item">
-                                <div class="analysis-label">⏱️ Entry Duration</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">timer</span>Entry Duration</div>
                                 <div class="analysis-value" id="analysis-duration">2.5 sec</div>
                             </div>
                             <div class="analysis-item">
-                                <div class="analysis-label">🔥 Thermal Radius</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">local_fire_department</span>Thermal Radius</div>
                                 <div class="analysis-value" id="analysis-thermal">17.3 km</div>
                             </div>
                             <div class="analysis-item">
-                                <div class="analysis-label">💥 Blast Radius</div>
+                                <div class="analysis-label"><span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.3rem;">crisis_alert</span>Blast Radius</div>
                                 <div class="analysis-value" id="analysis-blast">12.8 km</div>
                             </div>
                         </div>
@@ -284,21 +310,21 @@
 
                     <div class="mitigation-options">
                         <div class="mitigation-card">
-                            <div class="mitigation-icon">🚀</div>
+                            <div class="mitigation-icon"><span class="material-icons">rocket_launch</span></div>
                             <h3>Kinetic Impactor</h3>
                             <p>High-speed spacecraft collision to alter trajectory</p>
                             <button class="btn-mitigation" data-strategy="kinetic">Select Strategy</button>
                         </div>
 
                         <div class="mitigation-card">
-                            <div class="mitigation-icon">🧲</div>
+                            <div class="mitigation-icon"><span class="material-icons">attractions</span></div>
                             <h3>Gravity Tractor</h3>
                             <p>Spacecraft uses gravity to slowly tow asteroid off course</p>
                             <button class="btn-mitigation" data-strategy="gravity">Select Strategy</button>
                         </div>
 
                         <div class="mitigation-card">
-                            <div class="mitigation-icon">☢️</div>
+                            <div class="mitigation-icon"><span class="material-icons">science</span></div>
                             <h3>Nuclear Deflection</h3>
                             <p>Nuclear detonation creates powerful thrust for deflection</p>
                             <button class="btn-mitigation" data-strategy="nuclear">Select Strategy</button>
@@ -336,7 +362,7 @@
         </section>
 
         <!-- Map Section -->
-        <section class="map-section">
+        <section id="map" class="map-section">
             <h2 class="section-title">Impact Location</h2>
             <div id="map-container" class="map-container"></div>
             <div class="map-coordinates">
