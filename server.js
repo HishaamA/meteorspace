@@ -282,7 +282,7 @@ function getPopulationDensity(lat, lon) {
     }
     
     // Find nearest population data points using distance calculation
-    const searchRadius = 0.5; // degrees (~55km at equator)
+    const searchRadius = 2.0; // degrees (~220km at equator)
     let nearestPoints = [];
     
     // First pass: find points within search radius
