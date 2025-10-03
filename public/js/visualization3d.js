@@ -72,19 +72,21 @@ const Visualization3D = {
     },
     
     /**
-     * Create Earth sphere
+     * Create Earth sphere with NASA Blue Marble texture
      */
     createEarth() {
         const geometry = new THREE.SphereGeometry(50, 64, 64);
         
-        // Create Earth material with simple coloring
+        // Load NASA Blue Marble Earth texture
+        const textureLoader = new THREE.TextureLoader();
+        const earthTexture = textureLoader.load('/images/earth-blue-marble.jpg');
+        
+        // Create Earth material with texture
         const material = new THREE.MeshPhongMaterial({
-            color: 0x2233ff,
-            emissive: 0x112244,
+            map: earthTexture,
             specular: 0x333333,
             shininess: 25,
-            transparent: true,
-            opacity: 0.95
+            bumpScale: 0.5
         });
         
         this.earth = new THREE.Mesh(geometry, material);
@@ -100,38 +102,6 @@ const Visualization3D = {
         });
         const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
         this.earth.add(atmosphere);
-        
-        // Add simple continents (green patches)
-        this.addContinents();
-    },
-    
-    /**
-     * Add simple continent representations
-     */
-    addContinents() {
-        const continentPositions = [
-            { lat: 40, lon: -100, size: 20 },  // North America
-            { lat: -20, lon: -60, size: 18 },  // South America
-            { lat: 50, lon: 10, size: 15 },    // Europe
-            { lat: 0, lon: 20, size: 25 },     // Africa
-            { lat: 30, lon: 80, size: 22 },    // Asia
-            { lat: -25, lon: 135, size: 18 }   // Australia
-        ];
-        
-        continentPositions.forEach(cont => {
-            const geometry = new THREE.SphereGeometry(cont.size, 16, 16);
-            const material = new THREE.MeshBasicMaterial({
-                color: 0x228B22,
-                transparent: true,
-                opacity: 0.7
-            });
-            const continent = new THREE.Mesh(geometry, material);
-            
-            const pos = Physics.latLonToCartesian(cont.lat, cont.lon, 50.5);
-            continent.position.set(pos.x, pos.y, pos.z);
-            
-            this.earth.add(continent);
-        });
     },
     
     /**
