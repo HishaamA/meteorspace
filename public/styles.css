@@ -306,6 +306,8 @@ body {
     border-radius: 16px;
     padding: 1.5rem;
     border: 1px solid var(--border-color);
+    max-height: 800px;
+    overflow-y: auto;
 }
 
 .vis-sidebar h3 {
