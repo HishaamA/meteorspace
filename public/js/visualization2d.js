@@ -27,11 +27,31 @@ const Visualization2D = {
         // Add click handler for selecting impact location
         this.map.on('click', (e) => {
             const { lat, lng } = e.latlng;
-            document.getElementById('lat').value = lat.toFixed(4);
-            document.getElementById('lon').value = lng.toFixed(4);
             
-            // Update marker
+            // Update location picker inputs
+            const latInput = document.getElementById('latitude-input');
+            const lonInput = document.getElementById('longitude-input');
+            if (latInput) latInput.value = lat.toFixed(2);
+            if (lonInput) lonInput.value = lng.toFixed(2);
+            
+            // Update legacy inputs if they exist
+            const legacyLatInput = document.getElementById('lat');
+            const legacyLonInput = document.getElementById('lon');
+            if (legacyLatInput) legacyLatInput.value = lat.toFixed(4);
+            if (legacyLonInput) legacyLonInput.value = lng.toFixed(4);
+            
+            // Update marker on map
             this.updateImpactLocation(lat, lng);
+            
+            // Update 3D visualization marker
+            if (window.Visualization3D) {
+                window.Visualization3D.placeLocationMarker(lat, lng);
+            }
+            
+            // Show notification
+            if (window.UI) {
+                window.UI.showNotification(`Location set to ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`, 'success');
+            }
         });
         
         console.log('2D Map initialized');
@@ -63,8 +83,23 @@ const Visualization2D = {
         // Update coordinates on drag
         this.impactMarker.on('dragend', (e) => {
             const pos = e.target.getLatLng();
-            document.getElementById('lat').value = pos.lat.toFixed(4);
-            document.getElementById('lon').value = pos.lng.toFixed(4);
+            
+            // Update location picker inputs
+            const latInput = document.getElementById('latitude-input');
+            const lonInput = document.getElementById('longitude-input');
+            if (latInput) latInput.value = pos.lat.toFixed(2);
+            if (lonInput) lonInput.value = pos.lng.toFixed(2);
+            
+            // Update legacy inputs if they exist
+            const legacyLatInput = document.getElementById('lat');
+            const legacyLonInput = document.getElementById('lon');
+            if (legacyLatInput) legacyLatInput.value = pos.lat.toFixed(4);
+            if (legacyLonInput) legacyLonInput.value = pos.lng.toFixed(4);
+            
+            // Update 3D visualization marker
+            if (window.Visualization3D) {
+                window.Visualization3D.placeLocationMarker(pos.lat, pos.lng);
+            }
         });
         
         // Center map on location

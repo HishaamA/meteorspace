@@ -10,6 +10,11 @@ const Visualization3D = {
     orbit: null,
     trajectoryLine: null,
     animationId: null,
+    locationMarker: null,
+    raycaster: null,
+    mouse: null,
+    locationPickerActive: false,
+    onLocationSelected: null,
     
     /**
      * Initialize 3D scene
@@ -62,8 +67,15 @@ const Visualization3D = {
         gridHelper.position.y = -80;
         this.scene.add(gridHelper);
         
+        // Initialize raycaster for location picking
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
+        
+        // Add click event listener for location picking
+        this.renderer.domElement.addEventListener('click', (event) => this.onCanvasClick(event));
         
         // Start animation loop
         this.animate();
@@ -332,11 +344,11 @@ const Visualization3D = {
             this.earth.rotation.y += 0.001;
         }
         
-        // Pulse impact markers
+        // Pulse markers (both impact and location markers)
         this.earth?.children.forEach(child => {
-            if (child.userData.isImpactMarker) {
+            if (child.userData.isImpactMarker || child.userData.isLocationMarker) {
                 child.userData.pulse += 0.05;
-                const scale = 1 + Math.sin(child.userData.pulse) * 0.3;
+                const scale = 1 + Math.sin(child.userData.pulse) * 0.2;
                 child.scale.set(scale, scale, scale);
             }
         });
@@ -346,6 +358,137 @@ const Visualization3D = {
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
+    },
+    
+    /**
+     * Handle canvas click for location picking
+     */
+    onCanvasClick(event) {
+        if (!this.locationPickerActive) return;
+        
+        const container = document.getElementById('trajectory-canvas');
+        const rect = container.getBoundingClientRect();
+        
+        // Calculate mouse position in normalized device coordinates (-1 to +1)
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Update raycaster
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        
+        // Check for intersection with Earth
+        const intersects = this.raycaster.intersectObject(this.earth);
+        
+        if (intersects.length > 0) {
+            const point = intersects[0].point;
+            
+            // Convert 3D point to latitude/longitude
+            const latLon = this.cartesianToLatLon(point);
+            
+            // Place marker at the location
+            this.placeLocationMarker(latLon.lat, latLon.lon);
+            
+            // Call callback if provided
+            if (this.onLocationSelected) {
+                this.onLocationSelected(latLon.lat, latLon.lon);
+            }
+            
+            console.log(`Location selected: ${latLon.lat.toFixed(2)}°, ${latLon.lon.toFixed(2)}°`);
+        }
+    },
+    
+    /**
+     * Convert 3D Cartesian coordinates to latitude/longitude
+     */
+    cartesianToLatLon(point) {
+        const radius = 50; // Earth sphere radius
+        const x = point.x;
+        const y = point.y;
+        const z = point.z;
+        
+        // Calculate latitude and longitude
+        const lat = Math.asin(y / radius) * (180 / Math.PI);
+        const lon = Math.atan2(x, z) * (180 / Math.PI);
+        
+        return { lat, lon };
+    },
+    
+    /**
+     * Place a marker on the globe at the specified location
+     */
+    placeLocationMarker(lat, lon) {
+        // Remove existing marker if any
+        if (this.locationMarker) {
+            this.earth.remove(this.locationMarker);
+        }
+        
+        // Create marker geometry (pin shape)
+        const markerGroup = new THREE.Group();
+        
+        // Pin head (sphere)
+        const headGeometry = new THREE.SphereGeometry(2, 16, 16);
+        const headMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff3333,
+            emissive: 0xff0000,
+            emissiveIntensity: 0.5
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 3;
+        markerGroup.add(head);
+        
+        // Pin stick (cylinder)
+        const stickGeometry = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
+        const stickMaterial = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+        const stick = new THREE.Mesh(stickGeometry, stickMaterial);
+        stick.position.y = 1.5;
+        markerGroup.add(stick);
+        
+        // Glow ring
+        const ringGeometry = new THREE.RingGeometry(2, 3, 32);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff3333,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.rotation.x = Math.PI / 2;
+        markerGroup.add(ring);
+        
+        // Position marker on Earth surface
+        const pos = Physics.latLonToCartesian(lat, lon, 50);
+        markerGroup.position.set(pos.x, pos.y, pos.z);
+        
+        // Orient marker to point outward from Earth center
+        markerGroup.lookAt(0, 0, 0);
+        markerGroup.rotateX(Math.PI);
+        
+        // Add pulsing animation data
+        markerGroup.userData.isLocationMarker = true;
+        markerGroup.userData.pulse = 0;
+        
+        this.locationMarker = markerGroup;
+        this.earth.add(this.locationMarker);
+    },
+    
+    /**
+     * Enable or disable location picker mode
+     */
+    setLocationPickerMode(active) {
+        this.locationPickerActive = active;
+        
+        if (active) {
+            this.renderer.domElement.style.cursor = 'crosshair';
+        } else {
+            this.renderer.domElement.style.cursor = 'default';
+        }
+    },
+    
+    /**
+     * Set callback for when a location is selected
+     */
+    setLocationCallback(callback) {
+        this.onLocationSelected = callback;
     },
     
     /**

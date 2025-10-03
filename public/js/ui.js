@@ -108,6 +108,59 @@ const UI = {
                 }
             });
         }
+        
+        // Location picker button - scroll to map
+        const pickLocationBtn = document.getElementById('pick-location-btn');
+        if (pickLocationBtn) {
+            pickLocationBtn.addEventListener('click', () => {
+                // Scroll to the map section
+                const mapSection = document.querySelector('.map-section');
+                if (mapSection) {
+                    mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    this.showNotification('Click on the map below to select impact location', 'info');
+                    
+                    // Highlight the map briefly
+                    const mapContainer = document.getElementById('map-container');
+                    if (mapContainer) {
+                        mapContainer.style.boxShadow = '0 0 30px rgba(79, 163, 255, 0.6)';
+                        setTimeout(() => {
+                            mapContainer.style.boxShadow = '';
+                        }, 2000);
+                    }
+                }
+            });
+        }
+        
+        // Listen to manual lat/lon input changes to update marker
+        const latInput = document.getElementById('latitude-input');
+        const lonInput = document.getElementById('longitude-input');
+        
+        if (latInput && lonInput) {
+            const updateMarker = () => {
+                const lat = parseFloat(latInput.value) || 0;
+                const lon = parseFloat(lonInput.value) || 0;
+                
+                // Clamp values to valid ranges
+                const clampedLat = Math.max(-90, Math.min(90, lat));
+                const clampedLon = Math.max(-180, Math.min(180, lon));
+                
+                Visualization3D.placeLocationMarker(clampedLat, clampedLon);
+                
+                // Also update legacy inputs
+                const legacyLatInput = document.getElementById('lat');
+                const legacyLonInput = document.getElementById('lon');
+                if (legacyLatInput) legacyLatInput.value = clampedLat.toFixed(4);
+                if (legacyLonInput) legacyLonInput.value = clampedLon.toFixed(4);
+                
+                // Update 2D map
+                if (window.Visualization2D) {
+                    window.Visualization2D.updateImpactLocation(clampedLat, clampedLon);
+                }
+            };
+            
+            latInput.addEventListener('change', updateMarker);
+            lonInput.addEventListener('change', updateMarker);
+        }
     },
     
     /**
@@ -301,14 +354,37 @@ const UI = {
         this.showLoading(true);
         
         try {
+            // Get latitude and longitude from location picker inputs
+            const latInput = document.getElementById('latitude-input');
+            const lonInput = document.getElementById('longitude-input');
+            
+            let lat = latInput ? parseFloat(latInput.value) || 0 : 0;
+            let lon = lonInput ? parseFloat(lonInput.value) || 0 : 0;
+            
+            // Fallback to legacy inputs if location picker inputs don't exist
+            if (!latInput || !lonInput) {
+                const legacyLatInput = document.getElementById('lat');
+                const legacyLonInput = document.getElementById('lon');
+                lat = legacyLatInput ? parseFloat(legacyLatInput.value) || 0 : 0;
+                lon = legacyLonInput ? parseFloat(legacyLonInput.value) || 0 : 0;
+            }
+            
+            // Sync legacy inputs with current values
+            const legacyLatInput = document.getElementById('lat');
+            const legacyLonInput = document.getElementById('lon');
+            if (legacyLatInput) legacyLatInput.value = lat.toFixed(4);
+            if (legacyLonInput) legacyLonInput.value = lon.toFixed(4);
+            
+            console.log(`Running simulation at location: ${lat}°, ${lon}°`);
+            
             // Gather parameters
             const params = {
                 diameter: parseFloat(document.getElementById('diameter').value),
                 velocity: parseFloat(document.getElementById('velocity').value),
                 angle: parseFloat(document.getElementById('angle').value),
                 density: parseFloat(document.getElementById('density').value),
-                lat: parseFloat(document.getElementById('lat').value),
-                lon: parseFloat(document.getElementById('lon').value)
+                lat: lat,
+                lon: lon
             };
             
             // Calculate impact

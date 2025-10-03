@@ -17,9 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
         UI.init();
         console.log('✓ UI Controls initialized');
         
-        // Set initial impact location marker
-        const defaultLat = parseFloat(document.getElementById('lat').value);
-        const defaultLon = parseFloat(document.getElementById('lon').value);
+        // Set initial impact location markers
+        const latInput = document.getElementById('latitude-input');
+        const lonInput = document.getElementById('longitude-input');
+        const defaultLat = latInput ? parseFloat(latInput.value) || 0 : 0;
+        const defaultLon = lonInput ? parseFloat(lonInput.value) || 0 : 0;
+        
+        // Sync legacy inputs with location picker values
+        const legacyLatInput = document.getElementById('lat');
+        const legacyLonInput = document.getElementById('lon');
+        if (legacyLatInput) legacyLatInput.value = defaultLat.toFixed(4);
+        if (legacyLonInput) legacyLonInput.value = defaultLon.toFixed(4);
+        
+        // Place markers on both 3D and 2D visualizations
+        Visualization3D.placeLocationMarker(defaultLat, defaultLon);
         Visualization2D.updateImpactLocation(defaultLat, defaultLon);
         
         console.log('🚀 Application ready!');
