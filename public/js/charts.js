@@ -92,23 +92,28 @@ const Charts = {
         this.charts.impactDistribution = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Direct Impact (30%)', 'Other Effects (35%)', 'Seismic Effects (35%)', 'Tsunami (0%)'],
+                labels: [
+                    'Direct Impact (30%)',
+                    'Thermal & Blast (35%)', 
+                    'Seismic Effects (35%)',
+                    'Tsunami (0%)'
+                ],
                 datasets: [{
-                    label: 'Impact Distribution',
+                    label: 'Impact Effects',
                     data: [30, 35, 35, 0],
                     backgroundColor: [
-                        'rgba(158, 158, 158, 0.8)',
-                        'rgba(120, 120, 120, 0.8)',
-                        'rgba(100, 100, 100, 0.8)',
-                        'rgba(80, 80, 80, 0.8)'
+                        'rgba(158, 158, 158, 0.9)',   // Light gray - Direct Impact
+                        'rgba(120, 120, 120, 0.9)',   // Medium gray - Thermal & Blast
+                        'rgba(100, 100, 100, 0.9)',   // Dark gray - Seismic
+                        'rgba(80, 80, 80, 0.9)'       // Darkest gray - Tsunami
                     ],
                     borderColor: [
-                        'rgba(158, 158, 158, 1)',
-                        'rgba(120, 120, 120, 1)',
-                        'rgba(100, 100, 100, 1)',
-                        'rgba(80, 80, 80, 1)'
+                        'rgba(200, 200, 200, 1)',
+                        'rgba(150, 150, 150, 1)',
+                        'rgba(130, 130, 130, 1)',
+                        'rgba(100, 100, 100, 1)'
                     ],
-                    borderWidth: 2
+                    borderWidth: 3
                 }]
             },
             options: {
@@ -117,23 +122,42 @@ const Charts = {
                 aspectRatio: 1.5,
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'right',
+                        align: 'center',
                         labels: {
                             color: '#e0e0e0',
-                            font: { size: 12 },
-                            padding: 12,
+                            font: { 
+                                size: 13,
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                                weight: '500'
+                            },
+                            padding: 15,
                             usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 15,
+                            boxHeight: 15,
                             generateLabels: function(chart) {
                                 const data = chart.data;
                                 if (data.labels.length && data.datasets.length) {
                                     return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
+                                        const dataset = data.datasets[0];
+                                        const value = dataset.data[i];
+                                        const backgroundColor = dataset.backgroundColor[i];
+                                        
+                                        // Add description for each type
+                                        const descriptions = [
+                                            'Immediate blast effects',
+                                            'Coastal wave damage',
+                                            'Earthquake-like damage',
+                                            'Secondary impacts'
+                                        ];
+                                        
                                         return {
-                                            text: label.split(' (')[0],
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
+                                            text: label,
+                                            fillStyle: backgroundColor,
+                                            strokeStyle: dataset.borderColor[i],
+                                            lineWidth: 2,
                                             hidden: false,
                                             index: i
                                         };
@@ -150,9 +174,25 @@ const Charts = {
                         borderColor: '#2196F3',
                         borderWidth: 1,
                         padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         callbacks: {
                             label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
+                                const descriptions = {
+                                    'Direct Impact': 'Immediate blast effects',
+                                    'Thermal & Blast': 'Coastal wave damage',
+                                    'Seismic Effects': 'Earthquake-like damage',
+                                    'Tsunami': 'Secondary impacts'
+                                };
+                                const labelText = context.label.split(' (')[0];
+                                const percentage = context.parsed + '%';
+                                const desc = descriptions[labelText] || '';
+                                return [percentage + ' - ' + labelText, desc];
                             }
                         }
                     }
