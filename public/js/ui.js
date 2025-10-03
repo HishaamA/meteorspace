@@ -109,6 +109,14 @@ const UI = {
                 }
             });
         }
+
+        // AI Strategic Analysis button
+        const aiAnalysisBtn = document.getElementById('generate-ai-analysis-btn');
+        if (aiAnalysisBtn) {
+            aiAnalysisBtn.addEventListener('click', () => {
+                this.generateAIAnalysis();
+            });
+        }
         
         // Location picker button - scroll to map
         const pickLocationBtn = document.getElementById('pick-location-btn');
@@ -803,6 +811,120 @@ const UI = {
             toast.style.animation = 'slideIn 0.3s ease reverse';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    },
+
+    /**
+     * Generate AI Strategic Analysis
+     */
+    async generateAIAnalysis() {
+        if (!this.currentScenario) {
+            this.showToast('⚠️ Please run a simulation first before generating AI analysis');
+            return;
+        }
+
+        const loadingEl = document.getElementById('ai-loading');
+        const resultEl = document.getElementById('ai-analysis-result');
+        const emptyStateEl = document.getElementById('ai-empty-state');
+        const contentEl = document.getElementById('ai-analysis-content');
+        const timestampEl = document.getElementById('ai-timestamp');
+        const generateBtn = document.getElementById('generate-ai-analysis-btn');
+
+        try {
+            // Show loading state
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            emptyStateEl.classList.add('hidden');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="material-icons spinning">autorenew</span> Generating...';
+
+            // Get current parameters
+            const params = {
+                diameter: parseFloat(document.getElementById('diameter').value),
+                velocity: parseFloat(document.getElementById('velocity').value),
+                angle: parseFloat(document.getElementById('angle').value),
+                density: parseFloat(document.getElementById('density').value),
+                lat: parseFloat(document.getElementById('lat').value),
+                lon: parseFloat(document.getElementById('lon').value)
+            };
+
+            // Call AI analysis API
+            const response = await fetch('/api/ai-analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    impactData: this.currentScenario.results,
+                    asteroidParams: params
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate AI analysis');
+            }
+
+            const data = await response.json();
+
+            // Convert markdown-style headers to HTML
+            const formattedAnalysis = this.formatAIAnalysis(data.analysis);
+
+            // Display results
+            contentEl.innerHTML = formattedAnalysis;
+            timestampEl.textContent = new Date(data.timestamp).toLocaleString();
+            
+            loadingEl.classList.add('hidden');
+            resultEl.classList.remove('hidden');
+            
+            this.showToast('✅ AI Analysis generated successfully');
+
+        } catch (error) {
+            console.error('AI Analysis Error:', error);
+            loadingEl.classList.add('hidden');
+            emptyStateEl.classList.remove('hidden');
+            this.showToast('❌ Failed to generate AI analysis');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<span class="material-icons">auto_awesome</span> Generate AI Analysis';
+        }
+    },
+
+    /**
+     * Format AI analysis text to HTML
+     */
+    formatAIAnalysis(text) {
+        // Convert markdown-style formatting to HTML
+        let html = text;
+
+        // Headers
+        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+
+        // Bold
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // Bullet points
+        html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+        // Numbered lists
+        html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+        const numberedListRegex = /(<li>.*<\/li>\n?){2,}/g;
+        html = html.replace(numberedListRegex, (match) => {
+            if (!match.includes('<ul>')) {
+                return '<ol>' + match + '</ol>';
+            }
+            return match;
+        });
+
+        // Paragraphs
+        html = html.split('\n\n').map(para => {
+            if (!para.startsWith('<h') && !para.startsWith('<ul') && !para.startsWith('<ol') && para.trim()) {
+                return '<p>' + para + '</p>';
+            }
+            return para;
+        }).join('\n');
+
+        return html;
     }
 };
 
