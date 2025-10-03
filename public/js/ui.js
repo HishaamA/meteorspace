@@ -889,39 +889,122 @@ const UI = {
     },
 
     /**
-     * Format AI analysis text to HTML
+     * Format AI analysis text to HTML with structured boxes and sections
      */
     formatAIAnalysis(text) {
-        // Convert markdown-style formatting to HTML
-        let html = text;
+        // Split text into sections based on major headings (##)
+        const sections = [];
+        const lines = text.split('\n');
+        let currentSection = null;
+        let currentContent = [];
 
-        // Headers
-        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // Check for major section headers (##)
+            if (line.match(/^##\s+(.+)$/)) {
+                // Save previous section if exists
+                if (currentSection) {
+                    sections.push({
+                        title: currentSection,
+                        content: currentContent.join('\n')
+                    });
+                }
+                // Start new section
+                currentSection = line.replace(/^##\s+/, '').trim();
+                currentContent = [];
+            } else {
+                currentContent.push(line);
+            }
+        }
 
-        // Bold
+        // Add last section
+        if (currentSection) {
+            sections.push({
+                title: currentSection,
+                content: currentContent.join('\n')
+            });
+        }
+
+        // Format each section
+        let html = sections.map((section, index) => {
+            const sectionClass = index === 0 ? 'ai-section ai-section-primary' : 'ai-section';
+            const iconMap = {
+                'EXECUTIVE SUMMARY': 'summarize',
+                'THREAT ASSESSMENT': 'warning',
+                'IMMEDIATE RESPONSE': 'emergency',
+                'EVACUATION': 'directions_run',
+                'MEDICAL': 'medical_services',
+                'INFRASTRUCTURE': 'engineering',
+                'COMMUNICATION': 'campaign',
+                'LONG-TERM': 'timeline',
+                'RECOVERY': 'autorenew',
+                'MITIGATION': 'shield',
+                'STRATEGIC': 'strategy'
+            };
+            
+            // Find matching icon
+            let icon = 'article';
+            for (const [key, value] of Object.entries(iconMap)) {
+                if (section.title.toUpperCase().includes(key)) {
+                    icon = value;
+                    break;
+                }
+            }
+
+            let formattedContent = this.formatSectionContent(section.content);
+            
+            return `
+                <div class="${sectionClass}">
+                    <div class="ai-section-header">
+                        <span class="material-icons ai-section-icon">${icon}</span>
+                        <h2 class="ai-section-title">${section.title}</h2>
+                    </div>
+                    <div class="ai-section-content">
+                        ${formattedContent}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return html;
+    },
+
+    /**
+     * Format content within a section
+     */
+    formatSectionContent(content) {
+        let html = content;
+
+        // Subsection headers (###)
+        html = html.replace(/^###\s+(.+)$/gm, '<div class="ai-subsection"><h3 class="ai-subsection-title">$1</h3></div>');
+
+        // Bold text with special styling for labels
+        html = html.replace(/\*\*([^*]+?):\*\*/g, '<span class="ai-label">$1:</span>');
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-        // Bullet points
-        html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+        // Bullet points with icons
+        html = html.replace(/^-\s+(.+)$/gm, '<li class="ai-bullet"><span class="bullet-icon">▸</span>$1</li>');
+        html = html.replace(/(<li class="ai-bullet">.*<\/li>\n?)+/g, '<ul class="ai-list">$&</ul>');
 
         // Numbered lists
-        html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-        const numberedListRegex = /(<li>.*<\/li>\n?){2,}/g;
+        html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ai-numbered" data-number="$1">$2</li>');
+        const numberedListRegex = /(<li class="ai-numbered".*<\/li>\n?)+/g;
         html = html.replace(numberedListRegex, (match) => {
-            if (!match.includes('<ul>')) {
-                return '<ol>' + match + '</ol>';
-            }
-            return match;
+            return '<ol class="ai-numbered-list">' + match + '</ol>';
         });
 
         // Paragraphs
         html = html.split('\n\n').map(para => {
-            if (!para.startsWith('<h') && !para.startsWith('<ul') && !para.startsWith('<ol') && para.trim()) {
-                return '<p>' + para + '</p>';
+            const trimmed = para.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('<h3') || 
+                trimmed.startsWith('<ul') || 
+                trimmed.startsWith('<ol') ||
+                trimmed.startsWith('<div class="ai-subsection"')) {
+                return para;
             }
-            return para;
+            return '<p class="ai-paragraph">' + para + '</p>';
         }).join('\n');
 
         return html;

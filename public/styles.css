@@ -1457,39 +1457,151 @@ select:focus {
     line-height: 1.8;
 }
 
-.ai-content h2 {
+/* AI Section Boxes */
+.ai-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.ai-section:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.ai-section-primary {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(76, 175, 80, 0.05) 100%);
+    border: 2px solid var(--accent-blue);
+}
+
+.ai-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ai-section-icon {
+    font-size: 2rem !important;
+    color: var(--accent-blue);
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%);
+    padding: 0.75rem;
+    border-radius: 50%;
+}
+
+.ai-section-title {
     color: var(--accent-blue);
     font-size: 1.5rem;
-    margin: 2rem 0 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--border-highlight);
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.ai-content h2:first-child {
-    margin-top: 0;
+.ai-section-content {
+    padding: 1.5rem;
 }
 
-.ai-content h3 {
+/* Subsections */
+.ai-subsection {
+    margin: 1.5rem 0;
+}
+
+.ai-subsection-title {
     color: var(--accent-cyan);
-    font-size: 1.2rem;
-    margin: 1.5rem 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(90deg, rgba(0, 188, 212, 0.1) 0%, transparent 100%);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 4px;
 }
 
-.ai-content p {
+/* Paragraphs */
+.ai-paragraph {
     margin: 1rem 0;
     color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
 }
 
-.ai-content ul,
-.ai-content ol {
+/* Lists */
+.ai-list {
+    list-style: none;
+    padding-left: 0;
     margin: 1rem 0;
-    padding-left: 2rem;
 }
 
-.ai-content li {
+.ai-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
     margin: 0.75rem 0;
     color: var(--text-secondary);
     line-height: 1.6;
+    padding: 0.5rem 0.75rem;
+    transition: background 0.2s ease;
+}
+
+.ai-bullet:hover {
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: 6px;
+}
+
+.bullet-icon {
+    color: var(--accent-blue);
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    flex-shrink: 0;
+}
+
+.ai-numbered-list {
+    list-style: none;
+    counter-reset: ai-counter;
+    padding-left: 0;
+    margin: 1rem 0;
+}
+
+.ai-numbered {
+    position: relative;
+    padding-left: 3rem;
+    margin: 1rem 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    counter-increment: ai-counter;
+}
+
+.ai-numbered::before {
+    content: counter(ai-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Labels and Strong Text */
+.ai-label {
+    color: var(--accent-blue);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .ai-content strong {
