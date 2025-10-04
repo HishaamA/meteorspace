@@ -102,16 +102,16 @@ const Charts = {
                     label: 'Impact Effects',
                     data: [30, 35, 35, 0],
                     backgroundColor: [
-                        'rgba(158, 158, 158, 0.9)',   // Light gray - Direct Impact
-                        'rgba(120, 120, 120, 0.9)',   // Medium gray - Thermal & Blast
-                        'rgba(100, 100, 100, 0.9)',   // Dark gray - Seismic
-                        'rgba(80, 80, 80, 0.9)'       // Darkest gray - Tsunami
+                        'rgba(255, 87, 34, 0.8)',     // Red-Orange - Direct Impact
+                        'rgba(255, 152, 0, 0.8)',     // Orange - Thermal & Blast
+                        'rgba(156, 39, 176, 0.8)',    // Purple - Seismic
+                        'rgba(33, 150, 243, 0.8)'     // Blue - Tsunami
                     ],
                     borderColor: [
-                        'rgba(200, 200, 200, 1)',
-                        'rgba(150, 150, 150, 1)',
-                        'rgba(130, 130, 130, 1)',
-                        'rgba(100, 100, 100, 1)'
+                        'rgba(255, 87, 34, 1)',
+                        'rgba(255, 152, 0, 1)',
+                        'rgba(156, 39, 176, 1)',
+                        'rgba(33, 150, 243, 1)'
                     ],
                     borderWidth: 3
                 }]
@@ -135,36 +135,8 @@ const Charts = {
                             padding: 15,
                             usePointStyle: true,
                             pointStyle: 'circle',
-                            boxWidth: 15,
-                            boxHeight: 15,
-                            generateLabels: function(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    return data.labels.map((label, i) => {
-                                        const dataset = data.datasets[0];
-                                        const value = dataset.data[i];
-                                        const backgroundColor = dataset.backgroundColor[i];
-                                        
-                                        // Add description for each type
-                                        const descriptions = [
-                                            'Immediate blast effects',
-                                            'Coastal wave damage',
-                                            'Earthquake-like damage',
-                                            'Secondary impacts'
-                                        ];
-                                        
-                                        return {
-                                            text: label,
-                                            fillStyle: backgroundColor,
-                                            strokeStyle: dataset.borderColor[i],
-                                            lineWidth: 2,
-                                            hidden: false,
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
+                            boxWidth: 12,
+                            boxHeight: 12
                         }
                     },
                     tooltip: {
