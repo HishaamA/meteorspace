@@ -459,12 +459,17 @@ function getPopulationDensity(lat, lon) {
 
 // Physics calculation functions
 function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
+    // Ensure parameters are within valid ranges
+    const validDiameter = Math.max(10, Math.min(2000, diameter)); // 10m to 2000m
+    const validVelocity = Math.max(11, Math.min(72, velocity)); // 11 to 72 km/s
+    const validAngle = Math.max(1, Math.min(90, angle)); // 1° to 90°
+    
     // Convert units
-    const radius = diameter / 2; // meters
-    const velocityMs = velocity * 1000; // m/s
-    const velocityKmh = velocity * 3600; // km/h
-    const velocityMph = velocity * 2236.94; // mph
-    const angleRad = (angle * Math.PI) / 180;
+    const radius = validDiameter / 2; // meters
+    const velocityMs = validVelocity * 1000; // m/s
+    const velocityKmh = validVelocity * 3600; // km/h
+    const velocityMph = validVelocity * 2236.94; // mph
+    const angleRad = (validAngle * Math.PI) / 180;
     
     // Calculate mass (spherical asteroid)
     const volume = (4 / 3) * Math.PI * Math.pow(radius, 3); // m³
@@ -478,16 +483,19 @@ function calculateImpactPhysics(diameter, velocity, angle, density, lat, lon) {
     // Crater diameter estimation (Holsapple & Housen scaling)
     const targetDensity = 2500; // kg/m³ (typical rock)
     const soundSpeed = 5000; // m/s (typical rock)
-    const craterDiameter = 1.8 * diameter * 
+    const craterDiameter = 1.8 * validDiameter * 
         Math.pow(density / targetDensity, 1/3) * 
         Math.pow(velocityMs / soundSpeed, 0.44) / 
         Math.pow(Math.sin(angleRad), 1/3);
     
-    const craterDepth = craterDiameter / 3;
+    // Apply angle and density effects to crater dimensions
+    const craterDepth = craterDiameter / 3 * (Math.sin(angleRad) * 0.5 + 0.5);
     const craterRadius = craterDiameter / 2;
     
-    // Seismic magnitude estimation
-    const seismicMagnitude = 0.67 * Math.log10(kineticEnergy) - 5.87;
+    // Seismic magnitude estimation - affected by angle and density
+    const angleEffect = Math.sin(angleRad); // More vertical impacts cause stronger seismic effects
+    const densityFactor = density / 3000; // Normalize density effect (3000 kg/m³ as baseline)
+    const seismicMagnitude = (0.67 * Math.log10(kineticEnergy) - 5.87) * (0.7 + 0.3 * angleEffect) * (0.8 + 0.2 * densityFactor);
     
     // Seismic felt radius (rough estimate based on magnitude)
     const seismicFeltRadius = Math.pow(10, seismicMagnitude / 2) * 0.5; // km
