@@ -907,6 +907,8 @@ const UI = {
         const lines = text.split('\n');
         let currentSection = null;
         let currentContent = [];
+        let mainTitle = '';
+        let titleFound = false;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -923,8 +925,14 @@ const UI = {
                 // Start new section
                 currentSection = line.replace(/^##\s+/, '').trim();
                 currentContent = [];
+                titleFound = true;
             } else {
-                currentContent.push(line);
+                // If we haven't found any ## header yet and line is not empty, it's the main title
+                if (!titleFound && line.trim() && !mainTitle) {
+                    mainTitle = line.trim();
+                } else {
+                    currentContent.push(line);
+                }
             }
         }
 
@@ -936,8 +944,14 @@ const UI = {
             });
         }
 
+        // Add main title if found
+        let html = '';
+        if (mainTitle) {
+            html = `<h1 class="ai-main-title">${mainTitle}</h1>`;
+        }
+        
         // Format each section
-        let html = sections.map((section, index) => {
+        html += sections.map((section, index) => {
             const sectionClass = index === 0 ? 'ai-section ai-section-primary' : 'ai-section';
             const iconMap = {
                 'EXECUTIVE SUMMARY': 'summarize',
@@ -986,12 +1000,18 @@ const UI = {
     formatSectionContent(content) {
         let html = content;
 
-        // Subsection headers (###)
-        html = html.replace(/^###\s+(.+)$/gm, '<div class="ai-subsection"><h3 class="ai-subsection-title">$1</h3></div>');
+        // Subsection headers (###) - remove any asterisks from headers
+        html = html.replace(/^###\s+(.+)$/gm, (match, title) => {
+            const cleanTitle = title.replace(/\*/g, '');
+            return `<div class="ai-subsection"><h3 class="ai-subsection-title">${cleanTitle}</h3></div>`;
+        });
 
         // Bold text with special styling for labels
         html = html.replace(/\*\*([^*]+?):\*\*/g, '<span class="ai-label">$1:</span>');
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        
+        // Remove any remaining single asterisks
+        html = html.replace(/\*/g, '');
 
         // Bullet points with icons
         html = html.replace(/^-\s+(.+)$/gm, '<li class="ai-bullet"><span class="bullet-icon">▸</span>$1</li>');
