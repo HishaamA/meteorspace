@@ -331,14 +331,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 📧 Contact
-
-**Team/Developer**: [Your Name/Team Name]  
-**Email**: your.email@example.com  
-**Project Link**: https://github.com/yourusername/meteor-madness-simulator
-
----
-
 ## 🏆 NASA Space Apps Challenge 2025
 
 **Challenge**: Meteor Madness - "Impactor-2025"  
